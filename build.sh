@@ -8,7 +8,7 @@ mkdir -p target
 
 uglifyjs --compress --output target/index.min.js -- "$SOURCE"
 
-zip -r target final.zip
+zip -r final.zip target
 
 size="$(stat -c%s final.zip)"
 
