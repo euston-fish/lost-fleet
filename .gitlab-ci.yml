@@ -1,0 +1,10 @@
+image: node:latest
+
+build:
+  scripts:
+    - apt-get install zip
+    - npm install -g uglify-es 
+    - ./build.sh
+  artifacts:
+    paths:
+      - final.zip
