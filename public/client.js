@@ -1,4 +1,4 @@
-var socket, //Socket.IO client
+let socket, //Socket.IO client
     buttons, //Button elements
     message, //Message element
     score, //Score element
@@ -12,18 +12,18 @@ var socket, //Socket.IO client
  * Disable all button
  */
 disableButtons = () => {
-    for (var i = 0; i < buttons.length; i++) {
-        buttons[i].setAttribute("disabled", "disabled");
-    }
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].setAttribute("disabled", "disabled");
+  }
 }
 
 /**
  * Enable all button
  */
 enableButtons = () => {
-    for (var i = 0; i < buttons.length; i++) {
-        buttons[i].removeAttribute("disabled");
-    }
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].removeAttribute("disabled");
+  }
 }
 
 /**
@@ -31,7 +31,7 @@ enableButtons = () => {
  * @param {string} text
  */
 setMessage = (text) => {
-    message.innerHTML = text;
+  message.innerHTML = text;
 }
 
 /**
@@ -39,79 +39,78 @@ setMessage = (text) => {
  * @param {string} text
  */
 displayScore = (text) => {
-    score.innerHTML = [
-        "<h2>" + text + "</h2>",
-        "Won: " + points.win,
-        "Lost: " + points.lose,
-        "Draw: " + points.draw
-    ].join("<br>");
+  score.innerHTML = [
+    "<h2>" + text + "</h2>",
+    "Won: " + points.win,
+    "Lost: " + points.lose,
+    "Draw: " + points.draw
+  ].join("<br>");
 }
 
 /**
  * Binde Socket.IO and button events
  */
 bind = () => {
+  socket.on("start", () => {
+    enableButtons();
+    setMessage("Round " + (points.win + points.lose + points.draw + 1));
+  });
 
-    socket.on("start", () => {
-        enableButtons();
-        setMessage("Round " + (points.win + points.lose + points.draw + 1));
-    });
+  socket.on("win", () => {
+    points.win++;
+    displayScore("You win!");
+  });
 
-    socket.on("win", () => {
-        points.win++;
-        displayScore("You win!");
-    });
+  socket.on("lose", () => {
+    points.lose++;
+    displayScore("You lose!");
+  });
 
-    socket.on("lose", () => {
-        points.lose++;
-        displayScore("You lose!");
-    });
+  socket.on("draw", () => {
+    points.draw++;
+    displayScore("Draw!");
+  });
 
-    socket.on("draw", () => {
-        points.draw++;
-        displayScore("Draw!");
-    });
+  socket.on("end", () => {
+    disableButtons();
+    setMessage("Waiting for opponent...");
+  });
 
-    socket.on("end", function () {
+  socket.on("connect", () => {
+    disableButtons();
+    setMessage("Waiting for opponent...");
+  });
+
+  socket.on("disconnect", () => {
+    disableButtons();
+    setMessage("Connection lost!");
+  });
+
+  socket.on("error", () => {
+    disableButtons();
+    setMessage("Connection error!");
+  });
+
+  for (var i = 0; i < buttons.length; i++) {
+    ((button, guess) => {
+      button.addEventListener("click", (e) => {
         disableButtons();
-        setMessage("Waiting for opponent...");
-    });
-
-    socket.on("connect", function () {
-        disableButtons();
-        setMessage("Waiting for opponent...");
-    });
-
-    socket.on("disconnect", function () {
-        disableButtons();
-        setMessage("Connection lost!");
-    });
-
-    socket.on("error", function () {
-        disableButtons();
-        setMessage("Connection error!");
-    });
-
-    for (var i = 0; i < buttons.length; i++) {
-        (function (button, guess) {
-            button.addEventListener("click", function (e) {
-                disableButtons();
-                socket.emit("guess", guess);
-            }, false);
-        })(buttons[i], i + 1);
-    }
+        socket.emit("guess", guess);
+      }, false);
+    })(buttons[i], i + 1);
+  }
 }
 
 /**
  * Client module init
  */
-function init() {
-    socket = io({ upgrade: false, transports: ["websocket"] });
-    buttons = document.getElementsByTagName("button");
-    message = document.getElementById("message");
-    score = document.getElementById("score");
-    disableButtons();
-    bind();
+init = () => {
+  socket = io({ upgrade: false, transports: ["websocket"] });
+  buttons = document.getElementsByTagName("button");
+  message = document.getElementById("message");
+  score = document.getElementById("score");
+  disableButtons();
+  bind();
 }
 
 window.addEventListener("load", init, false);

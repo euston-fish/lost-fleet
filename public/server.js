@@ -10,7 +10,7 @@ var users = [];
  * Find opponent for a user
  * @param {User} user
  */
-function findOpponent(user) {
+findOpponent = (user) => {
   for (var i = 0; i < users.length; i++) {
     if (
       user !== users[i] && 
@@ -25,7 +25,7 @@ function findOpponent(user) {
  * Remove user session
  * @param {User} user
  */
-function removeUser(user) {
+removeUser = (user) => {
   users.splice(users.indexOf(user), 1);
 }
 
@@ -34,7 +34,7 @@ function removeUser(user) {
  * @param {User} user1
  * @param {User} user2
  */
-function Game(user1, user2) {
+Game = (user1, user2) => {
   this.user1 = user1;
   this.user2 = user2;
 }
@@ -42,7 +42,7 @@ function Game(user1, user2) {
 /**
  * Start new game
  */
-Game.prototype.start = function () {
+Game.prototype.start = () => {
   this.user1.start(this, this.user2);
   this.user2.start(this, this.user1);
 }
@@ -51,14 +51,14 @@ Game.prototype.start = function () {
  * Is game ended
  * @return {boolean}
  */
-Game.prototype.ended = function () {
+Game.prototype.ended = () => {
   return this.user1.guess !== GUESS_NO && this.user2.guess !== GUESS_NO;
 }
 
 /**
  * Final score
  */
-Game.prototype.score = function () {
+Game.prototype.score = () => {
   if (
     this.user1.guess === GUESS_ROCK && this.user2.guess === GUESS_SCISSORS ||
     this.user1.guess === GUESS_PAPER && this.user2.guess === GUESS_ROCK ||
@@ -83,7 +83,7 @@ Game.prototype.score = function () {
  * User session class
  * @param {Socket} socket
  */
-function User(socket) {
+User = (socket) => {
   this.socket = socket;
   this.game = null;
   this.opponent = null;
@@ -94,7 +94,7 @@ function User(socket) {
  * Set guess value
  * @param {number} guess
  */
-User.prototype.setGuess = function (guess) {
+User.prototype.setGuess = (guess) => {
   if (
     !this.opponent ||
     guess <= GUESS_NO ||
@@ -111,7 +111,7 @@ User.prototype.setGuess = function (guess) {
  * @param {Game} game
  * @param {User} opponent
  */
-User.prototype.start = function (game, opponent) {
+User.prototype.start = (game, opponent) => {
   this.game = game;
   this.opponent = opponent;
   this.guess = GUESS_NO;
@@ -121,7 +121,7 @@ User.prototype.start = function (game, opponent) {
 /**
  * Terminate game
  */
-User.prototype.end = function () {
+User.prototype.end = () => {
   this.game = null;
   this.opponent = null;
   this.guess = GUESS_NO;
@@ -131,21 +131,21 @@ User.prototype.end = function () {
 /**
  * Trigger win event
  */
-User.prototype.win = function () {
+User.prototype.win = () => {
   this.socket.emit("win", this.opponent.guess);
 };
 
 /**
  * Trigger lose event
  */
-User.prototype.lose = function () {
+User.prototype.lose = () => {
   this.socket.emit("lose", this.opponent.guess);
 };
 
 /**
  * Trigger draw event
  */
-User.prototype.draw = function () {
+User.prototype.draw = () => {
   this.socket.emit("draw", this.opponent.guess);
 };
 
@@ -153,12 +153,12 @@ User.prototype.draw = function () {
  * Socket.IO on connect event
  * @param {Socket} socket
  */
-module.exports = function (socket) {
+module.exports = (socket) => {
   var user = new User(socket);
   users.push(user);
   findOpponent(user);
   
-  socket.on("disconnect", function () {
+  socket.on("disconnect", () => {
     console.log("Disconnected: " + socket.id);
     removeUser(user);
     if (user.opponent) {
@@ -167,7 +167,7 @@ module.exports = function (socket) {
     }
   });
 
-  socket.on("guess", function (guess) {
+  socket.on("guess", (guess) => {
     console.log("Guess: " + socket.id);
     if (user.setGuess(guess) && user.game.ended()) {
       user.game.score();
