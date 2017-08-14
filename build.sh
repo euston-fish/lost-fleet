@@ -2,11 +2,11 @@
 
 set -e
 
-SOURCE='index.js'
+SOURCE='public/*.js'
 
 mkdir -p target
 
-uglifyjs --compress --output target/index.min.js -- "$SOURCE"
+uglifyjs --compress --output target/index.min.js -- $SOURCE
 
 zip -r final.zip target
 
