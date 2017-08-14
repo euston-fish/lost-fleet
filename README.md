@@ -1,4 +1,7 @@
-# js13kgames.com Game Server
+# Untitled
+
+[![build status](https://gitlab.com/javanut13/13k/badges/master/build.svg)](https://gitlab.com/javanut13/13k/commits/master)
+[![coverage report](https://gitlab.com/javanut13/13k/badges/master/coverage.svg)](https://gitlab.com/javanut13/13k/commits/master)
 
 Game server for the [js13kGames Competition](http://js13kgames.com/).
 
