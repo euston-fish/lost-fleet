@@ -1,22 +1,22 @@
 let
   socket,
   canvas,
-  elem;
+  elem,
+  me;
 
 /**
  * Binde Socket.IO and button events
  */
 bind = () => {
   socket.bcast = (method, data) => socket.emit('bcast', {method: method, data: data});
-  socket.on("start", () => {
-    console.log('started');
-  });
 
   elem.onclick = (event) => {
     socket.bcast('clicked', {x: event.x, y: event.y})
+    canvas.fillStyle = me.color;
     canvas.fillRect(event.x, event.y, 10, 10);
   }
   socket.on('clicked', (data) => {
+    canvas.fillStyle = data.user.color;
     canvas.fillRect(data.x, data.y, 10, 10);
   });
 
@@ -24,6 +24,7 @@ bind = () => {
     console.log("aaaaaaaa")
   });
 
+  socket.on('connected', (user) => me = user);
 }
 
 /**
