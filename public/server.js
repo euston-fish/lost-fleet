@@ -43,5 +43,5 @@ module.exports = (socket) => {
       unit.tick();
     }
     socket.emit('tick', tick_commands);
-  }, 1000)
+  }, 100)
 };

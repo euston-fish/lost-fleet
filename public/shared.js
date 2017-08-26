@@ -30,7 +30,7 @@ let units = {};
 //}
 
 function Unit() {
-  this.position = [0, 0];
+  this.position = [50, 50];
   //this.type = 'standard';
   //this.user = data.user;
   //this.color = data.color;
@@ -41,18 +41,22 @@ function Unit() {
 }
 
 Unit.prototype.draw = function(canvas) {
-  console.log('drawing unit', this);
+  //console.log('drawing unit', this);
   if (this.selected) {
     canvas.fillStyle = 'pink';
   } else {
     canvas.fillStyle = 'blue';
   }
   let [x, y] = this.position;
-  canvas.fillRect(x, y, 10, 10);
+  canvas.beginPath();
+  canvas.arc(Math.round(x), Math.round(y), 5, 0, Math.PI * 2);
+  canvas.fill();
+  //canvas.fillRect(x, y, 10, 10);
 }
 
-Unit.prototype.covers = function(x, y) {
-  return this.x < x && this.y < y && (this.x + this.width) > x && (this.y + this.height) > y;
+Unit.prototype.in_region = function([tl_x, tl_y], [br_x, br_y]) {
+  let [x, y] = this.position;
+  return tl_x-5 < x && x < br_x+5 && tl_y-5 < y && y < br_y+5;
 }
 
 function new_unit_id() {
