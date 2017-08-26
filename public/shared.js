@@ -10,42 +10,45 @@ const colors = [
 ]
 let units = {};
 
-function User() {
-  let color = colors.splice(Math.random() * colors.length, 1)[0];
-  this.color = color;
-  this.id = color;
-}
+//function User() {
+  //let color = colors.splice(Math.random() * colors.length, 1)[0];
+  //this.color = color;
+  //this.id = color;
+//}
 
 /**
  * Terminate game
  */
-User.prototype.end = () => {
-};
+//User.prototype.end = () => {
+//};
 
-let UnitFactory = (data) => {
-  switch(data.type) {
-    case 'standard': return new Unit(data);
-    default: return null;
-  }
-}
+//let UnitFactory = (data) => {
+  //switch(data.type) {
+    //case 'standard': return new Unit(data);
+    //default: return null;
+  //}
+//}
 
-function Unit(data) {
-  this.type = 'standard';
-  this.user = data.user;
-  this.color = data.color;
-  this.x = data.x;
-  this.y = data.y;
-  this.width = 20;
-  this.height = 20;
+function Unit() {
+  this.position = [0, 0];
+  //this.type = 'standard';
+  //this.user = data.user;
+  //this.color = data.color;
+  //this.x = data.x;
+  //this.y = data.y;
+  //this.width = 20;
+  //this.height = 20;
 }
 
 Unit.prototype.draw = function(canvas) {
+  console.log('drawing unit', this);
   if (this.selected) {
     canvas.fillStyle = 'pink';
   } else {
-    canvas.fillStyle = this.color;
+    canvas.fillStyle = 'blue';
   }
-  canvas.fillRect(this.x, this.y, this.width, this.height);
+  let [x, y] = this.position;
+  canvas.fillRect(x, y, 10, 10);
 }
 
 Unit.prototype.covers = function(x, y) {
@@ -82,10 +85,10 @@ function move_towards(position, target, speed) {
 }
 
 function Drone(obj) {
+  Unit.call(this);
   if(obj === undefined) {
     this.id = new_unit_id();
     units[this.id] = this;
-    this.position = [0, 0];
     this.theta = 0;
     this.speed = 5;
     this.stats = [0, 0, 0];
@@ -100,6 +103,8 @@ function Drone(obj) {
     this.target = obj.target;
   }
 }
+
+Drone.prototype = Object.create(Unit.prototype, {});
 
 function Structure() {
   this.id = new_unit_id();
