@@ -2,22 +2,40 @@ let
   socket,
   canvas,
   elem,
-  me;
+  me,
+  units = [];
 
-/**
- * Binde Socket.IO and button events
- */
+let draw = () => {
+  units.forEach((unit) => unit.draw(canvas));
+}
+
 bind = () => {
   socket.bcast = (method, data) => socket.emit('bcast', {method: method, data: data});
 
   elem.onclick = (event) => {
-    socket.bcast('clicked', {x: event.x, y: event.y})
-    canvas.fillStyle = me.color;
-    canvas.fillRect(event.x, event.y, 10, 10);
+    let item;
+    if ((item = units.find((unit) => unit.covers(event.x, event.y))) != null) {
+      if (item.user.id === me.id) {
+        units.forEach((unit) => unit.selected = false)
+        item.selected = true;
+        draw();
+      }
+    } else {
+      let unit = UnitFactory({
+        type: 'standard',
+        x: event.x,
+        y: event.y,
+        user: me,
+        color: me.color
+      });
+      socket.bcast('new_unit', unit);
+      units.push(unit);
+      draw();
+    }
   }
-  socket.on('clicked', (data) => {
-    canvas.fillStyle = data.user.color;
-    canvas.fillRect(data.x, data.y, 10, 10);
+  socket.on('new_unit', (data) => {
+    units.push(UnitFactory(data));
+    draw();
   });
 
   socket.on("error", () => {
