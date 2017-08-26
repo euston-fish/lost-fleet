@@ -12,7 +12,7 @@ do
   uglifyjs -c -m --output target/${file%.js}.min.js -- $file
 done
 
-rm final.zip
+rm -f final.zip
 zip -9 -r final.zip target
 
 if [ $(uname) = Darwin ]; then
