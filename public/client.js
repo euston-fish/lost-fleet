@@ -3,6 +3,7 @@ let
   canvas,
   elem,
   me,
+  mothership,
   units = [];
 
 let draw = () => {
@@ -10,7 +11,15 @@ let draw = () => {
 }
 
 bind = () => {
-  socket.bcast = (method, data) => socket.emit('bcast', {method: method, data: data});
+  socket.on('tick', (commands) => {
+    console.log('tick', commands);
+    for ([destination, ...params] of commands) {
+      units[destination].receive(...params);
+    }
+    for (unit of Object.values(units)) {
+      unit.tick();
+    }
+  });
 
   elem.onclick = (event) => {
     let item;
@@ -38,23 +47,19 @@ bind = () => {
     draw();
   });
 
-  socket.on("error", () => {
-    console.log("aaaaaaaa")
+  socket.on('connected', (mothership_) => {
+    console.log('connected', mothership_);
+    mothership = new Drone(mothership_);
   });
 
-  socket.on('connected', (user) => me = user);
+  socket.on("error", () => {
+    console.log("error")
+  });
 }
 
-/**
- * Client module init
- */
 init = () => {
   socket = io({ upgrade: false, transports: ["websocket"] });
-  elem = document.getElementById('c');
-  canvas = elem.getContext('2d');
-  canvas.canvas.width  = window.innerWidth;
-  canvas.canvas.height = window.innerHeight;
-  bind();
+  bind()
 }
 
 window.addEventListener("load", init, false);
