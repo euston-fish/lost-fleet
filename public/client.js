@@ -5,7 +5,8 @@ let
   me,
   mothership,
   selection_start,
-  selection_end;
+  selection_end,
+  selected;
 
 let draw = () => {
   canvas.clearRect(0, 0, canvas.canvas.width, canvas.canvas.height);
@@ -55,19 +56,26 @@ bind = () => {
       let br_y = Math.max(selection_start[1], selection_end[1]);
       selection_start = null;
       selection_end = null;
+      selected = [];
       let item;
       for(unit of Object.values(units)) {
         if(unit.in_region([tl_x, tl_y], [br_x, br_y])) {
+          selected.push(unit);
           unit.selected = true;
         } else {
           unit.selected = false;
         }
       }
     } else if(event.button === 2) {
-      for(unit of Object.values(units)) {
-        if(unit.selected) {
-          socket.emit('command', [0, 'move_to', [event.x, event.y]]);
-        }
+      //let average_pos = [0, 0]
+      //for(unit of selected) {
+        //average_pos = add(average_pos, unit.position);
+      //}
+      //average_pos = scale(average_pos, 1/selected.length);
+      let offset = [0, 0]
+      for(unit of selected) {
+        socket.emit('command', [unit.id, 'move_to', add([event.x, event.y], offset)]);
+        offset = add(offset, [12, 0]);
       }
     }
   });
@@ -76,9 +84,11 @@ bind = () => {
     //draw();
   //});
 
-  socket.on('connected', (mothership_) => {
-    console.log('connected', mothership_);
-    mothership = new Drone(mothership_);
+  socket.on('connected', (units) => {
+    console.log('connected', units);
+    for(unit of units) {
+      new Drone(unit);
+    }
   });
 
   socket.on("error", () => {

@@ -8,6 +8,13 @@ function User(socket) {
   this.units = {};
   let mothership = new Drone();
   this.units[mothership.id] = mothership;
+  mothership = new Drone();
+  mothership.position = [60, 60];
+  this.units[mothership.id] = mothership;
+  mothership = new Drone();
+  mothership.position = [40, 60];
+  this.units[mothership.id] = mothership;
+  console.log(this.units);
 }
 
 module.exports = (socket) => {
@@ -30,7 +37,7 @@ module.exports = (socket) => {
 
   console.log("Connected: " + socket.id);
   console.log(users.length)
-  socket.emit('connected', Object.values(user.units)[0]);
+  socket.emit('connected', Object.values(user.units));
 
   setInterval(() => {
     let tick_commands = commands;

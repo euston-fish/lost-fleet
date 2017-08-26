@@ -43,7 +43,7 @@ function Unit() {
 Unit.prototype.draw = function(canvas) {
   //console.log('drawing unit', this);
   if (this.selected) {
-    canvas.fillStyle = 'pink';
+    canvas.fillStyle = 'orange';
   } else {
     canvas.fillStyle = 'blue';
   }
@@ -84,7 +84,12 @@ function norm([x, y]) {
   return [x/l, y/l];
 }
 
+function leng([x, y]) {
+  return Math.sqrt(x*x+y*y);
+}
+
 function move_towards(position, target, speed) {
+  if(leng(add(target, inv(position))) < speed) return target;
   return add(position, scale(norm(add(target, inv(position))), speed));
 }
 
