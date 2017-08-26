@@ -4,11 +4,16 @@ set -e
 
 SOURCE='public/*.js'
 
-mkdir -p target
+rm -rf target
+mkdir -p target/public
 
-uglifyjs --compress --output target/index.min.js -- $SOURCE
+for file in $SOURCE
+do
+  uglifyjs -c -m --output target/${file%.js}.min.js -- $file
+done
 
-zip -r final.zip target
+rm final.zip
+zip -9 -r final.zip target
 
 if [ $(uname) = Darwin ]; then
   flag=-f%z
