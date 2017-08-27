@@ -43,12 +43,16 @@ function Unit() {
 
 Unit.prototype.draw = function(canvas) {
   //console.log('drawing unit', this);
-  canvas.fillStyle = this.selected ? 'orange' : 'blue';
+  canvas.fillStyle = this.selected ? 'orange' : this.color();
   let [x, y] = this.position;
   canvas.beginPath();
   canvas.arc(Math.round(x), Math.round(y), 5, 0, Math.PI * 2);
   canvas.fill();
   //canvas.fillRect(x, y, 10, 10);
+}
+
+Unit.prototype.color = function() {
+  return 'rgb(' + this.stats + ')';
 }
 
 Unit.prototype.in_region = function([tl_x, tl_y], [br_x, br_y]) {
@@ -96,8 +100,8 @@ function Drone(owner_id, obj) {
     this.id = new_unit_id();
     units[this.id] = this;
     this.theta = 0;
-    this.speed = 5;
-    this.stats = [0, 0, 0];
+    this.stats = [128, 128, 128];
+    this.speed = Drone.top_speed(this);
     this.target = null;
   } else {
     this.id = obj.id;
@@ -111,7 +115,14 @@ function Drone(owner_id, obj) {
   this.owner_id = owner_id;
 }
 
+Drone.top_speed = (self) => self.stats[0] / 12.8;
+
 Drone.prototype = Object.create(Unit.prototype, {});
+
+Drone.prototype.set_stats = function (stats) {
+  this.stats = stats;
+  this.speed = Drone.top_speed(this)
+}
 
 function Structure() {
   this.id = new_unit_id();
@@ -135,7 +146,7 @@ Drone.prototype.tick = function() {
 
 Drone.prototype.create = function(stats) {
   let d = new Drone(this.owner_id);
-  d.stats = stats;
+  d.set_stats(stats);
   d.position = add(this.position, [10, 10]);
   if (users) {
     users[this.owner_id].units[d.id] = d;

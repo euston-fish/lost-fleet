@@ -33,7 +33,6 @@ module.exports = (socket) => {
 
   socket.on('command', ([destination, ...params]) => {
     console.log('received command', destination, ...params);
-    console.log(user.units);
     if (user.units[destination] !== undefined) {
       console.log('desination recognised');
       commands.push([destination, ...params]);
