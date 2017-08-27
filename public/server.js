@@ -23,8 +23,11 @@ module.exports = (socket) => {
   
   socket.on('disconnect', () => {
     console.log('Disconnected: ' + socket.id);
-    users.splice(user, 1);
-    delete sockets[socket.id];
+    for (var unit of Object.values(user.units)) {
+      delete units[unit.id];
+    }
+    users.splice(users.indexOf(user), 1);
+    // TODO: probably handle this better
   });
 
   socket.on('command', ([destination, ...params]) => {
