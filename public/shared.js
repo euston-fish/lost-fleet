@@ -1,44 +1,89 @@
 "use strict";
 
-const colors = [
-  'red',
-  'green',
-  'blue',
-  '#2b2b2b',
-  'yellow',
-  'cyan'
-]
-let units = {};
-let users;
+function Arena({ users: users, units: drones, id_counter: id_counter }) {
+  this.units = {};
+  this.users = {};
+  this.id_counter = id_counter;
 
-//function User() {
-  //let color = colors.splice(Math.random() * colors.length, 1)[0];
-  //this.color = color;
-  //this.id = color;
-//}
+  for (var user of users) new User(this, user);
+  for(var drone of drones) new Drone(this, drone);
 
-/**
- * Terminate game
- */
-//User.prototype.end = () => {
-//};
+  console.log('drones:', drones);
 
-//let UnitFactory = (data) => {
-  //switch(data.type) {
-    //case 'standard': return new Unit(data);
-    //default: return null;
-  //}
-//}
+  console.log('created a new arena', this);
+}
 
-function Unit() {
-  this.position = [50, 50];
-  //this.type = 'standard';
-  //this.user = data.user;
-  //this.color = data.color;
-  //this.x = data.x;
-  //this.y = data.y;
-  //this.width = 20;
-  //this.height = 20;
+Arena.prototype.serialize = function() {
+  return {
+    users: Object.values(this.users),
+    units: Object.values(this.units),
+    id_counter: this.id_counter
+  }
+}
+
+Arena.prototype.tick = function() {
+  for (var unit of Object.values(this.units)) {
+    unit.tick();
+  }
+}
+
+Arena.prototype.receive = function([command, ...params]) {
+  console.log('arena receive', command, ...params);
+  Arena.handlers[command].call(this, ...params);
+}
+
+Arena.handlers = {}
+Arena.handlers.introduce_user = function(user, drones) {
+  console.log('introduce user', user, drones);
+  user = new User(this, user);
+  for (var drone of drones) {
+    // all of these drones should belong to `user`
+    drone.owner_id = user.id;
+    new Drone(this, drone);
+  }
+}
+
+Arena.handlers.command_unit = function(id, ...params) {
+  if(this.units[id]) this.units[id].receive(...params);
+}
+
+Arena.handlers.remove_user = function(user_id) {
+  console.log(this);
+  for (let unit_id of Object.values(this.users[user_id].unit_ids)) {
+    delete this.units[unit_id];
+  }
+  delete this.users[user_id];
+  // TODO: maybe handle this better
+}
+
+function User(arena, { id: id }) {
+  this.id = id || arena.id_counter++;
+  arena.users[this.id] = this;
+  this.unit_ids = {};
+  console.log('created a new user', this);
+}
+
+User.become = function(user) {
+  Object.setPrototypeOf(user, User.prototype);
+  Object.setPrototypeOf(user.unit_ids, Set.prototype);
+}
+
+// `owner_id` and `position` are required. `id` can be generated if it's not given
+function Unit(arena, { id: id,
+                owner_id: owner_id,
+                position: position }) {
+  this.owner_id = owner_id;
+  console.log('creating a unit, passed id is', id);
+  if(id === undefined) this.id = arena.id_counter++;
+  else this.id = id;
+  arena.units[this.id] = this;
+  console.log('so this.id is', this.id);
+  arena.users[owner_id].unit_ids[this.id] = this.id;
+  this.position = position;
+}
+
+Unit.become = function(unit) {
+  Object.setPrototypeOf(unit, Drone.prototype); // TODO: this will need to be fixed when we add structures
 }
 
 Unit.prototype.draw = function(canvas) {
@@ -55,14 +100,6 @@ Unit.prototype.in_region = function([tl_x, tl_y], [br_x, br_y]) {
   let [x, y] = this.position;
   return tl_x-5 < x && x < br_x+5 && tl_y-5 < y && y < br_y+5;
 }
-
-function new_unit_id() {
-  let id = new_unit_id.counter;
-  new_unit_id.counter += 1;
-  return id;
-}
-
-new_unit_id.counter = 0;
 
 function add([x, y], [z, w]) {
   return [x+z, y+w];
@@ -90,35 +127,14 @@ function move_towards(position, target, speed) {
   return add(position, scale(norm(add(target, inv(position))), speed));
 }
 
-function Drone(owner_id, obj) {
-  Unit.call(this);
-  if(obj === undefined) {
-    this.id = new_unit_id();
-    units[this.id] = this;
-    this.theta = 0;
+function Drone(arena, { stats: stats, target: target, ...rest }) {
+    Unit.call(this, arena, rest);
+    this.stats = stats || [128, 128, 128];
+    this.target = target || null;
     this.speed = 5;
-    this.stats = [0, 0, 0];
-    this.target = null;
-  } else {
-    this.id = obj.id;
-    units[this.id] = this;
-    this.position = obj.position;
-    this.theta = obj.theta;
-    this.speed = obj.speed;
-    this.stats = obj.stats;
-    this.target = obj.target;
-  }
-  this.owner_id = owner_id;
 }
 
 Drone.prototype = Object.create(Unit.prototype, {});
-
-function Structure() {
-  this.id = new_unit_id();
-  units[this.id] = this;
-  this.position = [0, 0];
-  this.stats = [0, 0, 0];
-}
 
 Drone.prototype.receive = function(command, ...params) {
   console.log('received', command, ...params);
@@ -134,10 +150,5 @@ Drone.prototype.tick = function() {
 }
 
 Drone.prototype.create = function(stats) {
-  let d = new Drone(this.owner_id);
-  d.stats = stats;
-  d.position = add(this.position, [10, 10]);
-  if (users) {
-    users[this.owner_id].units[d.id] = d;
-  }
+  let d = new Drone({ owner_id: this.owner_id, position: add(this.position, [10, 10]), stats: stats});
 }

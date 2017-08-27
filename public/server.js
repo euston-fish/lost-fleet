@@ -1,59 +1,59 @@
 "use strict";
 
-users = {};
+let sockets = {};
+
 let commands = [];
 
-function User(socket) {
-  this.socket = socket;
-  this.units = {};
-  this.id = socket.id;
-  let mothership = new Drone(this.id);
-  this.units[mothership.id] = mothership;
-  mothership = new Drone(this.id);
-  mothership.position = [60, 60];
-  this.units[mothership.id] = mothership;
-  mothership = new Drone(this.id);
-  mothership.position = [40, 60];
-  this.units[mothership.id] = mothership;
-  console.log(this.units);
-}
+let arena;
 
-module.exports = (socket) => {
-  let user = new User(socket);
-  users[user.id] = user;
+module.exports = function(socket) {
+  if(!arena) {
+    arena = new Arena({ users: [], units: [], id_counter: 0 });
+
+    setInterval(() => {
+      let tick_commands = commands;
+      commands = [];
+      for(let command of tick_commands) {
+        console.log('executing command', command);
+        arena.receive(command);
+      }
+      //for (var [destination, ...params] of tick_commands) {
+        //console.log(destination, ...params);
+        //state.units[destination].receive(...params);
+      //}
+      arena.tick();
+      for(socket of Object.values(sockets)) {
+        socket.emit('tick', tick_commands);
+      }
+    }, 100);
+  }
+
+  let socket_id = socket.id
+
+  sockets[socket_id] = socket;
+  //new Drone({ owner_id: user.id, position: [50, 50] });
+  //new Drone({ owner_id: user.id, position: [60, 60] });
+  //new Drone({ owner_id: user.id, position: [40, 60] });
+  
+  commands.push(['introduce_user', { id: socket_id }, [{ position: [50, 50] }, { position: [60, 60] }, { position: [40, 60] }]]);
   
   socket.on('disconnect', () => {
-    console.log('Disconnected: ' + socket.id);
-    for (var unit of Object.values(user.units)) {
-      delete units[unit.id];
-    }
-    delete users[user.id];
-    // TODO: probably handle this better
+    console.log('Disconnected: ' + socket_id);
+    commands.push(['remove_user', socket_id]);
   });
 
   socket.on('command', ([destination, ...params]) => {
     console.log('received command', destination, ...params);
-    console.log(user.units);
-    if (user.units[destination] !== undefined) {
+    console.log(arena.users, socket_id, socket_id);
+    console.log(arena.users[socket_id].unit_ids[destination]);
+    if (arena.users[socket_id].unit_ids[destination] !== undefined) {
       console.log('desination recognised');
-      commands.push([destination, ...params]);
+      commands.push(['command_unit', destination, ...params]);
     }
   });
 
-  console.log("Connected: " + socket.id);
-  console.log(users.length)
-  socket.emit('connected', Object.values(user.units));
-
-  setInterval(() => {
-    let tick_commands = commands;
-    commands = [];
-    for (var [destination, ...params] of tick_commands) {
-      console.log(destination, ...params);
-      units[destination].receive(...params);
-    }
-    for (var unit of Object.values(units)) {
-      unit.tick();
-    }
-    socket.emit('tick', tick_commands);
-  }, 100)
-};
+  console.log("Connected: " + socket_id);
+  //socket.emit('connected', state);
+  console.log(arena);
+  socket.emit('connected', arena.serialize(), socket_id);
+}

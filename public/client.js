@@ -1,6 +1,7 @@
 (function() {
-  let socket, ctx, me, mothership, selection_start, cursor_location, selected;
+  let socket, ctx, me, mothership, selection_start, cursor_location, selected = [];
   let slider_vals, el;
+  let arena;
 
   let draw = () => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -8,18 +9,18 @@
     if(selection_start !== null && cursor_location !== null) {
       ctx.strokeRect(...selection_start, ...add(cursor_location, inv(selection_start)));
     }
-    Object.values(units).forEach((unit) => unit.draw(ctx));
+    if(arena) {
+      Object.values(arena.units).forEach((unit) => unit.draw(ctx));
+    }
     window.requestAnimationFrame(draw);
   }
 
   function handle_tick(commands) {
     //console.log('tick', commands);
-    for (var [destination, ...params] of commands) {
-      units[destination].receive(...params);
+    for (var command of commands) {
+      arena.receive(command);
     }
-    for (var unit of Object.values(units)) {
-      unit.tick();
-    }
+    arena.tick();
   }
 
   init = () => {
@@ -72,7 +73,8 @@
         selection_start = null;
         selected = [];
         let item;
-        for(var unit of Object.values(units)) {
+        for(let unit_id of Object.values(arena.users[me].unit_ids)) {
+          let unit = arena.units[unit_id];
           if(unit.in_region([tl_x, tl_y], [br_x, br_y])) {
             selected.push(unit);
             unit.selected = true;
@@ -84,17 +86,17 @@
       } else if(event.button === 2) {
         let offset = [0, 0]
         for(var unit of selected) {
+          console.log('sending move for unit', unit);
           socket.emit('command', [unit.id, 'move_to', add([event.x, event.y], offset)]);
           offset = add(offset, [12, 0]);
         }
       }
     });
 
-    socket.on('connected', (units) => {
-      console.log('connected', units);
-      for(var unit of units) {
-        new Drone(unit);
-      }
+    socket.on('connected', (arena_, me_) => {
+      arena = new Arena(arena_);
+      me = me_;
+      console.log('connected', arena, me);
     });
 
     socket.on("error", () => {
