@@ -2,3 +2,4 @@ target/*
 final.zip
 node_modules/*
 npm-debug.log
+*.swp

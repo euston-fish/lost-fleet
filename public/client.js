@@ -10,6 +10,7 @@ let
 
 let draw = () => {
   canvas.clearRect(0, 0, canvas.canvas.width, canvas.canvas.height);
+  canvas.strokeStyle = 'white';
   if(selection_start !== null && selection_end !== null) canvas.strokeRect(...selection_start, ...add(selection_end, inv(selection_start)));
   Object.values(units).forEach((unit) => unit.draw(canvas));
   window.requestAnimationFrame(draw);
@@ -18,10 +19,10 @@ let draw = () => {
 bind = () => {
   socket.on('tick', (commands) => {
     //console.log('tick', commands);
-    for ([destination, ...params] of commands) {
+    for (var [destination, ...params] of commands) {
       units[destination].receive(...params);
     }
-    for (unit of Object.values(units)) {
+    for (var unit of Object.values(units)) {
       unit.tick();
     }
   });
@@ -58,7 +59,7 @@ bind = () => {
       selection_end = null;
       selected = [];
       let item;
-      for(unit of Object.values(units)) {
+      for(var unit of Object.values(units)) {
         if(unit.in_region([tl_x, tl_y], [br_x, br_y])) {
           selected.push(unit);
           unit.selected = true;
@@ -73,7 +74,7 @@ bind = () => {
       //}
       //average_pos = scale(average_pos, 1/selected.length);
       let offset = [0, 0]
-      for(unit of selected) {
+      for(var unit of selected) {
         socket.emit('command', [unit.id, 'move_to', add([event.x, event.y], offset)]);
         offset = add(offset, [12, 0]);
       }
@@ -86,7 +87,7 @@ bind = () => {
 
   socket.on('connected', (units) => {
     console.log('connected', units);
-    for(unit of units) {
+    for(var unit of units) {
       new Drone(unit);
     }
   });
