@@ -1,17 +1,11 @@
 (function() {
-  let
-    socket,
-    ctx,
-    me,
-    mothership,
-    selection_start,
-    selection_end,
-    selected;
+  let socket, ctx, me, mothership, selection_start, selected;
+  let cursor_location;
 
   let draw = () => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.strokeStyle = 'white';
-    if(selection_start !== null && selection_end !== null) ctx.strokeRect(...selection_start, ...add(selection_end, inv(selection_start)));
+    if(selection_start !== null && cursor_location !== null) ctx.strokeRect(...selection_start, ...add(cursor_location, inv(selection_start)));
     Object.values(units).forEach((unit) => unit.draw(ctx));
     window.requestAnimationFrame(draw);
   }
@@ -35,38 +29,36 @@
     socket.on('tick', handle_tick);
 
     selection_start = null;
-    selection_end = null;
 
     elem.addEventListener('contextmenu', (event) => { event.preventDefault(); });
 
     elem.addEventListener('mousedown', (event) => {
+      cursor_location = [event.x, event.y];
       if(event.button === 0) {
-        selection_start = [event.x, event.y];
+        selection_start = cursor_location;
       }
     });
 
     elem.addEventListener('mousemove', (event) => {
-      if(event.button === 0) {
-        selection_end = [event.x, event.y];
-      }
+      cursor_location = [event.x, event.y];
     });
 
     elem.addEventListener('mouseup', (event) => {
       if(event.button === 0) {
-        selection_end = [event.x, event.y];
-        if(selection_start === null) selection_start = selection_end;
-        let tl_x = Math.min(selection_start[0], selection_end[0]);
-        let tl_y = Math.min(selection_start[1], selection_end[1]);
-        let br_x = Math.max(selection_start[0], selection_end[0]);
-        let br_y = Math.max(selection_start[1], selection_end[1]);
+        cursor_location = [event.x, event.y];
+        if(selection_start === null) selection_start = cursor_location;
+        let tl_x = Math.min(selection_start[0], cursor_location[0]);
+        let tl_y = Math.min(selection_start[1], cursor_location[1]);
+        let br_x = Math.max(selection_start[0], cursor_location[0]);
+        let br_y = Math.max(selection_start[1], cursor_location[1]);
         selection_start = null;
-        selection_end = null;
         selected = [];
         let item;
         for(var unit of Object.values(units)) {
           if(unit.in_region([tl_x, tl_y], [br_x, br_y])) {
             selected.push(unit);
             unit.selected = true;
+            console.log('selected', unit);
           } else {
             unit.selected = false;
           }
