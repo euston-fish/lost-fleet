@@ -22,6 +22,14 @@
     }
   }
 
+  show_selected = () => {
+    let info_pane = el('selected');
+    info_pane.innerHTML = '';
+    selected.forEach((unit) => {
+      info_pane.innerHTML += unit.stats + '<br>';
+    });
+  };
+
   init = () => {
     el = (id) => document.getElementById(id);
     socket = io({ upgrade: false, transports: ["websocket"] });
@@ -75,8 +83,8 @@
         selection_start = null;
         selected = [];
         let item;
-        for(var unit of Object.values(units)) {
-          if(unit.in_region([tl_x, tl_y], [br_x, br_y])) {
+        for (var unit of Object.values(units)) {
+          if (unit.in_region([tl_x, tl_y], [br_x, br_y])) {
             selected.push(unit);
             unit.selected = true;
             console.log('selected', unit);
@@ -84,6 +92,7 @@
             unit.selected = false;
           }
         }
+        show_selected();
       } else if(event.button === 2) {
         let offset = [0, 0]
         for(var unit of selected) {
