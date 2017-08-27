@@ -9,6 +9,7 @@ const colors = [
   'cyan'
 ]
 let units = {};
+let users;
 
 //function User() {
   //let color = colors.splice(Math.random() * colors.length, 1)[0];
@@ -42,11 +43,7 @@ function Unit() {
 
 Unit.prototype.draw = function(canvas) {
   //console.log('drawing unit', this);
-  if (this.selected) {
-    canvas.fillStyle = 'orange';
-  } else {
-    canvas.fillStyle = 'blue';
-  }
+  canvas.fillStyle = this.selected ? 'orange' : 'blue';
   let [x, y] = this.position;
   canvas.beginPath();
   canvas.arc(Math.round(x), Math.round(y), 5, 0, Math.PI * 2);
@@ -93,7 +90,7 @@ function move_towards(position, target, speed) {
   return add(position, scale(norm(add(target, inv(position))), speed));
 }
 
-function Drone(obj) {
+function Drone(owner_id, obj) {
   Unit.call(this);
   if(obj === undefined) {
     this.id = new_unit_id();
@@ -111,6 +108,7 @@ function Drone(obj) {
     this.stats = obj.stats;
     this.target = obj.target;
   }
+  this.owner_id = owner_id;
 }
 
 Drone.prototype = Object.create(Unit.prototype, {});
@@ -133,4 +131,13 @@ Drone.prototype.move_to = function(target) {
 
 Drone.prototype.tick = function() {
   if(this.target !== null) this.position = move_towards(this.position, this.target, this.speed);
+}
+
+Drone.prototype.create = function(stats) {
+  let d = new Drone(this.owner_id);
+  d.stats = stats;
+  d.position = add(this.position, [10, 10]);
+  if (users) {
+    users[this.owner_id].units[d.id] = d;
+  }
 }

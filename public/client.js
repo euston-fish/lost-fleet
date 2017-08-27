@@ -6,7 +6,9 @@
     mothership,
     selection_start,
     selection_end,
-    selected;
+    selected,
+    slider_vals,
+    el;
 
   let draw = () => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -29,18 +31,28 @@
   }
 
   init = () => {
+    el = (id) => document.getElementById(id);
     socket = io({ upgrade: false, transports: ["websocket"] });
-    let elem = document.getElementById('c');
+    let elem = el('c');
     ctx = elem.getContext('2d');
     ctx.canvas.width = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
     socket.on('tick', handle_tick);
 
-    ['thing', 'other', 'stuff'].forEach((range) => {
-      let disp = document.getElementById(range + '-val');
-      let slider = document.getElementById(range);
-      slider.onchange = () => disp.innerText = slider.value;
+    slider_vals = {};
+    ['r', 'g', 'b'].forEach((range) => {
+      let disp = el(range + '-val');
+      let slider = el(range);
+      slider.onchange = () => {
+        disp.innerText = slider.value;
+        slider_vals[range] = slider.value;
+      }
     });
+
+    el('create').onclick = () => {
+      socket.emit('command',
+        [selected[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]]);
+    };
 
     selection_start = null;
     selection_end = null;
