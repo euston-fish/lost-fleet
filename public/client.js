@@ -11,7 +11,9 @@ let
 let draw = () => {
   canvas.clearRect(0, 0, canvas.canvas.width, canvas.canvas.height);
   canvas.strokeStyle = 'white';
-  if(selection_start !== null && selection_end !== null) canvas.strokeRect(...selection_start, ...add(selection_end, inv(selection_start)));
+  if (selection_start !== null && selection_end !== null) {
+    canvas.strokeRect(...selection_start, ...add(selection_end, inv(selection_start)));
+  }
   Object.values(units).forEach((unit) => unit.draw(canvas));
   window.requestAnimationFrame(draw);
 }
@@ -103,6 +105,11 @@ init = () => {
   canvas = elem.getContext('2d');
   canvas.canvas.width = window.innerWidth;
   canvas.canvas.height = window.innerHeight;
+  ['thing', 'other', 'stuff'].forEach((range) => {
+    let disp = document.getElementById(range + '-val');
+    let slider = document.getElementById(range);
+    slider.onchange = () => disp.innerText = slider.value;
+  });
   bind();
   window.requestAnimationFrame(draw);
 }
