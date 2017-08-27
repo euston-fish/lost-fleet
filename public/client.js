@@ -39,11 +39,14 @@
         disp.innerText = slider.value;
         slider_vals[range] = slider.value;
       }
+      slider_vals[range] = '0';
     });
 
     el('create').onclick = () => {
-      socket.emit('command',
-        [selected[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]]);
+      if (selected[0]) {
+        socket.emit('command',
+          [selected[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]]);
+      }
     };
 
     selection_start = null;
