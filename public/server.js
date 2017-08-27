@@ -1,38 +1,40 @@
 "use strict";
 
-let users = [];
+users = {};
 let commands = [];
 
 function User(socket) {
   this.socket = socket;
   this.units = {};
-  let mothership = new Drone();
+  this.id = socket.id;
+  let mothership = new Drone(this.id);
   this.units[mothership.id] = mothership;
-  mothership = new Drone();
+  mothership = new Drone(this.id);
   mothership.position = [60, 60];
   this.units[mothership.id] = mothership;
-  mothership = new Drone();
+  mothership = new Drone(this.id);
   mothership.position = [40, 60];
   this.units[mothership.id] = mothership;
   console.log(this.units);
 }
 
 module.exports = (socket) => {
-  let user = new User();
-  users.push(user);
+  let user = new User(socket);
+  users[user.id] = user;
   
   socket.on('disconnect', () => {
     console.log('Disconnected: ' + socket.id);
     for (var unit of Object.values(user.units)) {
       delete units[unit.id];
     }
-    users.splice(users.indexOf(user), 1);
+    delete users[user.id];
     // TODO: probably handle this better
   });
 
   socket.on('command', ([destination, ...params]) => {
     console.log('received command', destination, ...params);
-    if(user.units[destination] !== undefined) {
+    console.log(user.units);
+    if (user.units[destination] !== undefined) {
       console.log('desination recognised');
       commands.push([destination, ...params]);
     }

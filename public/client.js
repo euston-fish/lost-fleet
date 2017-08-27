@@ -1,11 +1,13 @@
 (function() {
-  let socket, ctx, me, mothership, selection_start, selected;
-  let cursor_location;
+  let socket, ctx, me, mothership, selection_start, cursor_location, selected;
+  let slider_vals, el;
 
   let draw = () => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.strokeStyle = 'white';
-    if(selection_start !== null && cursor_location !== null) ctx.strokeRect(...selection_start, ...add(cursor_location, inv(selection_start)));
+    if(selection_start !== null && cursor_location !== null) {
+      ctx.strokeRect(...selection_start, ...add(cursor_location, inv(selection_start)));
+    }
     Object.values(units).forEach((unit) => unit.draw(ctx));
     window.requestAnimationFrame(draw);
   }
@@ -21,12 +23,28 @@
   }
 
   init = () => {
+    el = (id) => document.getElementById(id);
     socket = io({ upgrade: false, transports: ["websocket"] });
-    let elem = document.getElementById('c');
+    let elem = el('c');
     ctx = elem.getContext('2d');
     ctx.canvas.width = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
     socket.on('tick', handle_tick);
+
+    slider_vals = {};
+    ['r', 'g', 'b'].forEach((range) => {
+      let disp = el(range + '-val');
+      let slider = el(range);
+      slider.onchange = () => {
+        disp.innerText = slider.value;
+        slider_vals[range] = slider.value;
+      }
+    });
+
+    el('create').onclick = () => {
+      socket.emit('command',
+        [selected[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]]);
+    };
 
     selection_start = null;
 
