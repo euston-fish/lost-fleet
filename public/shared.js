@@ -75,14 +75,6 @@ Unit.prototype.serialize = function() {
            position: this.position };
 }
 
-Unit.prototype.draw = function(canvas) {
-  let [x, y] = this.position;
-  canvas.fillStyle = this.selected ? 'orange' : this.color();
-  canvas.beginPath();
-  canvas.arc(Math.round(x), Math.round(y), 5, 0, Math.PI * 2);
-  canvas.fill();
-}
-
 Unit.prototype.color = function() {
   return 'rgb(' + this.stats + ')';
 }

@@ -1,7 +1,21 @@
 (function() {
-  let socket, ctx, me, mothership, selection_start, cursor_location, selected = [];
+  let socket, ctx, me, mothership, selection_start, cursor_location, selected = {};
+  let selection_groups = {};
   let slider_vals, el;
   let arena;
+
+  Unit.prototype.draw = function(ctx) {
+    let [x, y] = this.position;
+    ctx.beginPath();
+    ctx.arc(Math.round(x), Math.round(y), 5, 0, Math.PI * 2);
+    ctx.fillStyle = this.color();
+    ctx.fill();
+    if(selected[this.id] !== undefined) {
+      ctx.arc(Math.round(x), Math.round(y), 7, 0, Math.PI * 2);
+      ctx.strokeStyle = 'orange';
+      ctx.stroke();
+    }
+  }
 
   let draw = () => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -26,7 +40,7 @@
   show_selected = () => {
     let info_pane = el('selected');
     info_pane.innerHTML = '';
-    selected.forEach((unit) => {
+    Object.values(selected).forEach((unit) => {
       info_pane.innerHTML += unit.stats + '<br>';
     });
   };
@@ -52,9 +66,9 @@
     });
 
     el('create').onclick = () => {
-      if (selected[0]) {
+      if (Object.values(selected)[0]) {
         socket.emit('command',
-          [selected[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]]);
+          [Object.values(selected)[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]]);
       }
     };
 
@@ -82,25 +96,35 @@
         let br_x = Math.max(selection_start[0], cursor_location[0]);
         let br_y = Math.max(selection_start[1], cursor_location[1]);
         selection_start = null;
-        selected = [];
+        selected = {};
         let item;
         for(let unit of Object.values(arena.users[me].units)) {
           if(unit.in_region([tl_x, tl_y], [br_x, br_y])) {
-            selected.push(unit);
-            unit.selected = true;
-            console.log('selected', unit);
-          } else {
-            unit.selected = false;
+            selected[unit.id] = unit;
           }
         }
         show_selected();
       } else if(event.button === 2) {
         let offset = [0, 0]
-        for(var unit of selected) {
+        for(var unit of Object.values(selected)) {
           console.log('sending move for unit', unit);
           socket.emit('command', [unit.id, 'move_to', add([event.x, event.y], offset)]);
           offset = add(offset, [12, 0]);
         }
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if(/^\d$/.test(event.key)) {
+        console.log('number pressed');
+        if(event.ctrlKey) {
+          selection_groups[event.key] = selected;
+        } else {
+          // TODO: if units get deleted, this might break
+          selected = selection_groups[event.key] || {};
+        }
+      } else if(event.key == 'a') {
+        selected = arena.users[me].units;
       }
     });
 
