@@ -23,6 +23,14 @@
     arena.tick();
   }
 
+  show_selected = () => {
+    let info_pane = el('selected');
+    info_pane.innerHTML = '';
+    selected.forEach((unit) => {
+      info_pane.innerHTML += unit.stats + '<br>';
+    });
+  };
+
   init = () => {
     el = (id) => document.getElementById(id);
     socket = io({ upgrade: false, transports: ["websocket"] });
@@ -40,11 +48,14 @@
         disp.innerText = slider.value;
         slider_vals[range] = slider.value;
       }
+      slider_vals[range] = '0';
     });
 
     el('create').onclick = () => {
-      socket.emit('command',
-        [selected[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]]);
+      if (selected[0]) {
+        socket.emit('command',
+          [selected[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]]);
+      }
     };
 
     selection_start = null;
@@ -82,6 +93,7 @@
             unit.selected = false;
           }
         }
+        show_selected();
       } else if(event.button === 2) {
         let offset = [0, 0]
         for(var unit of selected) {

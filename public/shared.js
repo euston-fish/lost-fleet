@@ -77,10 +77,14 @@ Unit.prototype.serialize = function() {
 
 Unit.prototype.draw = function(canvas) {
   let [x, y] = this.position;
-  canvas.fillStyle = this.selected ? 'orange' : 'blue';
+  canvas.fillStyle = this.selected ? 'orange' : this.color();
   canvas.beginPath();
   canvas.arc(Math.round(x), Math.round(y), 5, 0, Math.PI * 2);
   canvas.fill();
+}
+
+Unit.prototype.color = function() {
+  return 'rgb(' + this.stats + ')';
 }
 
 Unit.prototype.in_region = function([tl_x, tl_y], [br_x, br_y]) {
@@ -118,8 +122,10 @@ function Drone(arena, { stats: stats, target: target, ...rest }) {
     Unit.call(this, arena, rest);
     this.stats = stats || [128, 128, 128];
     this.target = target || null;
-    this.speed = 5;
+    this.speed = Drone.top_speed(this);
 }
+
+Drone.top_speed = (self) => self.stats[0] / 12.8;
 
 Drone.prototype = Object.create(Unit.prototype, {});
 

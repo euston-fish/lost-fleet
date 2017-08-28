@@ -44,8 +44,6 @@ module.exports = function(socket) {
 
   socket.on('command', ([destination, ...params]) => {
     console.log('received command', destination, ...params);
-    console.log(arena.users, socket_id, socket_id);
-    console.log(arena.users[socket_id].units[destination]);
     if (arena.users[socket_id].units[destination] !== undefined) {
       console.log('desination recognised');
       commands.push(['command_unit', destination, ...params]);
