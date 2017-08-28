@@ -35,7 +35,7 @@ module.exports = function(socket) {
   //new Drone({ owner_id: user.id, position: [60, 60] });
   //new Drone({ owner_id: user.id, position: [40, 60] });
   
-  commands.push(['introduce_user', { id: socket_id }, [{ position: [50, 50] }, { position: [60, 60] }, { position: [40, 60] }]]);
+  commands.push(['introduce_user', { id: socket_id, units: [{ position: [50, 50] }, { position: [60, 60] }, { position: [40, 60] }]}]);
   
   socket.on('disconnect', () => {
     console.log('Disconnected: ' + socket_id);
@@ -45,8 +45,8 @@ module.exports = function(socket) {
   socket.on('command', ([destination, ...params]) => {
     console.log('received command', destination, ...params);
     console.log(arena.users, socket_id, socket_id);
-    console.log(arena.users[socket_id].unit_ids[destination]);
-    if (arena.users[socket_id].unit_ids[destination] !== undefined) {
+    console.log(arena.users[socket_id].units[destination]);
+    if (arena.users[socket_id].units[destination] !== undefined) {
       console.log('desination recognised');
       commands.push(['command_unit', destination, ...params]);
     }

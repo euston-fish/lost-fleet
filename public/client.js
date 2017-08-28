@@ -73,8 +73,7 @@
         selection_start = null;
         selected = [];
         let item;
-        for(let unit_id of Object.values(arena.users[me].unit_ids)) {
-          let unit = arena.units[unit_id];
+        for(let unit of Object.values(arena.users[me].units)) {
           if(unit.in_region([tl_x, tl_y], [br_x, br_y])) {
             selected.push(unit);
             unit.selected = true;

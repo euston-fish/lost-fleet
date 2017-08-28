@@ -1,22 +1,16 @@
 "use strict";
 
-function Arena({ users: users, units: drones, id_counter: id_counter }) {
-  this.units = {};
+function Arena({ users: users, id_counter: id_counter }) {
   this.users = {};
+  this.units = {};
   this.id_counter = id_counter;
 
   for (var user of users) new User(this, user);
-  for(var drone of drones) new Drone(this, drone);
-
-  console.log('drones:', drones);
-
-  console.log('created a new arena', this);
 }
 
 Arena.prototype.serialize = function() {
   return {
-    users: Object.values(this.users),
-    units: Object.values(this.units),
+    users: Object.values(this.users).map((unit) => unit.serialize()),
     id_counter: this.id_counter
   }
 }
@@ -33,14 +27,9 @@ Arena.prototype.receive = function([command, ...params]) {
 }
 
 Arena.handlers = {}
-Arena.handlers.introduce_user = function(user, drones) {
-  console.log('introduce user', user, drones);
+Arena.handlers.introduce_user = function(user) {
+  console.log('introduce user', user);
   user = new User(this, user);
-  for (var drone of drones) {
-    // all of these drones should belong to `user`
-    drone.owner_id = user.id;
-    new Drone(this, drone);
-  }
 }
 
 Arena.handlers.command_unit = function(id, ...params) {
@@ -49,51 +38,49 @@ Arena.handlers.command_unit = function(id, ...params) {
 
 Arena.handlers.remove_user = function(user_id) {
   console.log(this);
-  for (let unit_id of Object.values(this.users[user_id].unit_ids)) {
+  for (let unit_id of Object.keys(this.users[user_id].units)) {
     delete this.units[unit_id];
   }
   delete this.users[user_id];
   // TODO: maybe handle this better
 }
 
-function User(arena, { id: id }) {
-  this.id = id || arena.id_counter++;
+function User(arena, { id: id, units: units }) {
+  this.id = (id !== undefined) ? id : arena.id_counter++;
   arena.users[this.id] = this;
-  this.unit_ids = {};
-  console.log('created a new user', this);
+  this.units = {};
+  for(let unit of (units || [])) new Drone(arena, Object.assign({ owner_id: this.id }, unit));
 }
 
-User.become = function(user) {
-  Object.setPrototypeOf(user, User.prototype);
-  Object.setPrototypeOf(user.unit_ids, Set.prototype);
+User.prototype.serialize = function() {
+  return { id: this.id,
+           units: Object.values(this.units).map((unit) => unit.serialize()) };
 }
 
 // `owner_id` and `position` are required. `id` can be generated if it's not given
 function Unit(arena, { id: id,
                 owner_id: owner_id,
                 position: position }) {
-  this.owner_id = owner_id;
-  console.log('creating a unit, passed id is', id);
-  if(id === undefined) this.id = arena.id_counter++;
-  else this.id = id;
-  arena.units[this.id] = this;
-  console.log('so this.id is', this.id);
-  arena.users[owner_id].unit_ids[this.id] = this.id;
+  this.arena = arena;
+  this.id = (id !== undefined) ? id : arena.id_counter++;
+  this.owner = arena.users[owner_id];
   this.position = position;
+  this.owner.units[this.id] = this;
+  arena.units[this.id] = this;
 }
 
-Unit.become = function(unit) {
-  Object.setPrototypeOf(unit, Drone.prototype); // TODO: this will need to be fixed when we add structures
+Unit.prototype.serialize = function() {
+  return { id: this.id,
+           owner_id: this.owner.id,
+           position: this.position };
 }
 
 Unit.prototype.draw = function(canvas) {
-  //console.log('drawing unit', this);
-  canvas.fillStyle = this.selected ? 'orange' : 'blue';
   let [x, y] = this.position;
+  canvas.fillStyle = this.selected ? 'orange' : 'blue';
   canvas.beginPath();
   canvas.arc(Math.round(x), Math.round(y), 5, 0, Math.PI * 2);
   canvas.fill();
-  //canvas.fillRect(x, y, 10, 10);
 }
 
 Unit.prototype.in_region = function([tl_x, tl_y], [br_x, br_y]) {
@@ -136,6 +123,14 @@ function Drone(arena, { stats: stats, target: target, ...rest }) {
 
 Drone.prototype = Object.create(Unit.prototype, {});
 
+Drone.prototype.serialize = function() {
+  return Object.assign({
+    stats: this.stats,
+    target: this.target,
+    speed: this.speed
+  }, Unit.prototype.serialize.call(this));
+}
+
 Drone.prototype.receive = function(command, ...params) {
   console.log('received', command, ...params);
   this[command](...params);
@@ -150,5 +145,5 @@ Drone.prototype.tick = function() {
 }
 
 Drone.prototype.create = function(stats) {
-  let d = new Drone({ owner_id: this.owner_id, position: add(this.position, [10, 10]), stats: stats});
+  let d = new Drone(this.arena, { owner_id: this.owner.id, position: add(this.position, [10, 10]), stats: stats});
 }
