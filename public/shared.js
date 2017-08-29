@@ -47,16 +47,20 @@ Arena.handlers.remove_user = function(user_id) {
   // TODO: maybe handle this better
 }
 
-function User(arena, { id: id, units: units }) {
+function User(arena, { id: id, units: units, color: color }) {
   this.id = (id !== undefined) ? id : arena.id_counter++;
   arena.users[this.id] = this;
   this.units = {};
+  this.color = color;
   for(let unit of (units || [])) new Drone(arena, Object.assign({ owner_id: this.id }, unit));
 }
 
 User.prototype.serialize = function() {
-  return { id: this.id,
-           units: Object.values(this.units).map((unit) => unit.serialize()) };
+  return {
+    id: this.id,
+    color: this.color,
+    units: Object.values(this.units).map((unit) => unit.serialize())
+  };
 }
 
 // `owner_id` and `position` are required. `id` can be generated if it's not given

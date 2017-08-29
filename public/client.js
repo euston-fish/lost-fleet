@@ -10,11 +10,9 @@
     ctx.arc(Math.round(x), Math.round(y), 5, 0, Math.PI * 2);
     ctx.fillStyle = this.color();
     ctx.fill();
-    if(selected[this.id] !== undefined) {
-      ctx.arc(Math.round(x), Math.round(y), 7, 0, Math.PI * 2);
-      ctx.strokeStyle = 'orange';
-      ctx.stroke();
-    }
+    ctx.strokeStyle = selected[this.id] !== undefined ? 'orange' : this.owner.color;
+    ctx.arc(Math.round(x), Math.round(y), 7, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   let draw = () => {

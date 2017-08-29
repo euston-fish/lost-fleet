@@ -1,5 +1,13 @@
 "use strict";
 
+let user_colors = [
+  'blue',
+  'red',
+  'green',
+  'grey',
+  'purple'
+];
+
 let sockets = {};
 
 let commands = [];
@@ -35,7 +43,8 @@ module.exports = function(socket) {
   //new Drone({ owner_id: user.id, position: [60, 60] });
   //new Drone({ owner_id: user.id, position: [40, 60] });
   
-  commands.push(['introduce_user', { id: socket_id, units: [{ position: [50, 50] }, { position: [60, 60] }, { position: [40, 60] }]}]);
+  let color = user_colors.splice(Math.floor(Math.random() * user_colors.length), 1);
+  commands.push(['introduce_user', { id: socket_id, color: color, units: [{ position: [50, 50] }, { position: [60, 60] }, { position: [40, 60] }]}]);
   
   socket.on('disconnect', () => {
     console.log('Disconnected: ' + socket_id);
