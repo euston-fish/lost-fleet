@@ -24,10 +24,17 @@
     ctx.arc(Math.round(x), Math.round(y), this.radius(), 0, Math.PI * 2);
     ctx.fillStyle = this.color();
     ctx.fill();
-    ctx.strokeStyle = selected[this.id] !== undefined ? 'orange' : this.owner.color;
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = this.owner.color;
+    ctx.lineWidth = 3;
     ctx.arc(Math.round(x), Math.round(y), this.radius(), 0, Math.PI * 2);
     ctx.stroke();
+    if (selected[this.id]) {
+      ctx.beginPath();
+      ctx.strokeStyle = 'orange'
+      ctx.lineWidth = 1;
+      ctx.arc(Math.round(x), Math.round(y), this.radius() + 5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
 
   let draw = () => {
