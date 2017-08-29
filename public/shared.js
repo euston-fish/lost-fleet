@@ -1,5 +1,7 @@
 "use strict";
 
+let EPSILON = 1;
+
 function Arena({ users: users, id_counter: id_counter }) {
   this.users = {};
   this.units = {};
@@ -105,28 +107,24 @@ function leng([x, y]) {
   return Math.sqrt(x*x+y*y);
 }
 
-function move_towards(position, target, speed) {
-  if(leng(add(target, inv(position))) < speed) return target;
-  return add(position, scale(norm(add(target, inv(position))), speed));
-}
-
-function Drone(arena, { stats: stats, target: target, ...rest }) {
+function Drone(arena, { stats: stats, waypoints: waypoints, velocity: velocity, ...rest }) {
     Unit.call(this, arena, rest);
     this.stats = stats || [128, 128, 128];
-    this.target = target || null;
-    this.speed = Drone.top_speed(this);
-    this.velocity = [0, 0];
+    this.waypoints = waypoints || [];
+    this.velocity = velocity || [0, 0];
 }
 
-Drone.top_speed = (self) => self.stats[0] / 30.0;
-
 Drone.prototype = Object.create(Unit.prototype, {});
+
+Drone.prototype.max_acceleration = function() {
+  return this.stats[0] / 30.0;
+}
 
 Drone.prototype.serialize = function() {
   return Object.assign({
     stats: this.stats,
-    target: this.target,
-    speed: this.speed
+    waypoints: this.waypoints,
+    velocity: this.velocity
   }, Unit.prototype.serialize.call(this));
 }
 
@@ -135,21 +133,26 @@ Drone.prototype.receive = function(command, ...params) {
   this[command](...params);
 }
 
-Drone.prototype.move_to = function(target) {
-  this.target = target;
+Drone.prototype.add_waypoint = function(waypoint) {
+  this.waypoints.push(waypoint);
+}
+
+Drone.prototype.clear_waypoints = function() {
+  this.waypoints = [];
 }
 
 Drone.prototype.tick = function() {
-  if(this.target !== null) {
-    let dir_vec = add(this.target, inv(this.position));
+  if(this.waypoints.length !== 0) {
+    let target = this.waypoints[0];
+    let dir_vec = add(target, inv(this.position));
     let target_vel = scale(norm(dir_vec), (Math.sqrt(1+8*leng(dir_vec))-1)/2);
-    if(dir_vec[0] === 0 && dir_vec[1] === 0) {
-      this.target = null;
+    if(Math.abs(dir_vec[0]) < EPSILON && Math.abs(dir_vec[1]) < EPSILON) {
+      this.waypoints.shift();
       target_vel = [0, 0];
     }
     
-    let acceleration = scale(norm(add(target_vel, inv(this.velocity))), Math.min(this.speed, leng(add(target_vel, inv(this.velocity)))));
-    console.log(acceleration);
+    let d_accel = add(target_vel, inv(this.velocity));
+    let acceleration = scale(norm(d_accel), Math.min(this.max_acceleration(), leng(d_accel)));
     this.velocity = add(this.velocity, acceleration);
   }
   this.position = add(this.position, this.velocity);

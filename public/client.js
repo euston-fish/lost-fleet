@@ -88,6 +88,7 @@
     });
 
     elem.addEventListener('mouseup', (event) => {
+      event.preventDefault();
       if(event.button === 0) {
         cursor_location = [event.x, event.y];
         if(selection_start === null) selection_start = cursor_location;
@@ -108,7 +109,8 @@
         let offset = [0, 0]
         for(var unit of Object.values(selected)) {
           console.log('sending move for unit', unit);
-          socket.emit('command', [unit.id, 'move_to', add([event.x, event.y], offset)]);
+          if(!event.altKey) socket.emit('command', [unit.id, 'clear_waypoints']);
+          socket.emit('command', [unit.id, 'add_waypoint', add([event.x, event.y], offset)]);
           offset = add(offset, [12, 0]);
         }
       }
