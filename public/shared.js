@@ -87,7 +87,7 @@ Unit.prototype.color = function() {
 
 Unit.prototype.in_region = function([tl_x, tl_y], [br_x, br_y]) {
   let [x, y] = this.position;
-  return tl_x-5 < x && x < br_x+5 && tl_y-5 < y && y < br_y+5;
+  return tl_x-this.radius() < x && x < br_x+this.radius() && tl_y-this.radius() < y && y < br_y+this.radius();
 }
 
 Unit.prototype.destroy = function() {
@@ -120,11 +120,22 @@ function clamp(val) {
   return Math.max(0, Math.min(255, val))
 }
 
-function Drone(arena, { stats: stats, waypoints: waypoints, velocity: velocity, ...rest }) {
-    Unit.call(this, arena, rest);
-    this.stats = stats || [128, 128, 128];
-    this.waypoints = waypoints || [];
-    this.velocity = velocity || [0, 0];
+function mix(val, min, max) {
+  return min + (max - min) * val;
+}
+
+function Drone(arena, {
+  mothership: mothership,
+  stats: stats,
+  waypoints: waypoints,
+  velocity: velocity,
+  ...rest }) {
+
+  Unit.call(this, arena, rest);
+  this.stats = stats || [128, 128, 128];
+  this.waypoints = waypoints || [];
+  this.mothership = mothership;
+  this.velocity = velocity || [0, 0];
 }
 
 Drone.prototype = Object.create(Unit.prototype, {});
@@ -151,7 +162,8 @@ Drone.prototype.serialize = function() {
   return Object.assign({
     stats: this.stats,
     waypoints: this.waypoints,
-    velocity: this.velocity
+    velocity: this.velocity,
+    mothership: this.mothership
   }, Unit.prototype.serialize.call(this));
 }
 
@@ -166,6 +178,10 @@ Drone.prototype.add_waypoint = function(waypoint) {
 
 Drone.prototype.clear_waypoints = function() {
   this.waypoints = [];
+}
+
+Drone.prototype.radius = function () {
+  return mix((this.stats[0] + this.stats[1] + this.stats[2]) / 765, 4, 35);
 }
 
 Drone.prototype.tick = function() {

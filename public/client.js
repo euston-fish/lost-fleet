@@ -21,11 +21,12 @@
   Unit.prototype.draw = function(ctx) {
     let [x, y] = this.position;
     ctx.beginPath();
-    ctx.arc(Math.round(x), Math.round(y), 5, 0, Math.PI * 2);
+    ctx.arc(Math.round(x), Math.round(y), this.radius(), 0, Math.PI * 2);
     ctx.fillStyle = this.color();
     ctx.fill();
     ctx.strokeStyle = selected[this.id] !== undefined ? 'orange' : this.owner.color;
-    ctx.arc(Math.round(x), Math.round(y), 7, 0, Math.PI * 2);
+    ctx.lineWidth = 2;
+    ctx.arc(Math.round(x), Math.round(y), this.radius(), 0, Math.PI * 2);
     ctx.stroke();
   }
 
@@ -60,6 +61,7 @@
   init = () => {
     el = (id) => document.getElementById(id);
     socket = io({ upgrade: false, transports: ["websocket"] });
+    let command = (...args) => socket.emit('command', args)
     let elem = el('c');
     ctx = elem.getContext('2d');
     ctx.canvas.width = window.innerWidth;
@@ -72,15 +74,14 @@
       let slider = el(range);
       slider.onchange = () => {
         disp.innerText = slider.value;
-        slider_vals[range] = slider.value;
+        slider_vals[range] = +slider.value;
       }
-      slider_vals[range] = '0';
+      slider_vals[range] = 0;
     });
 
     el('create').onclick = () => {
       if (Object.values(selected)[0]) {
-        socket.emit('command',
-          [Object.values(selected)[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]]);
+        command(Object.values(selected)[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]);
       }
     };
 
@@ -124,12 +125,12 @@
 
         for (var unit of Object.values(selected)) {
           if (target) {
-            socket.emit('command', [unit.id, 'attack', target.id]);
+            command(unit.id, 'attack', target.id);
           } else {
             if (!event.altKey) {
-              socket.emit('command', [unit.id, 'clear_waypoints']);
+              command(unit.id, 'clear_waypoints');
             }
-            socket.emit('command', [unit.id, 'add_waypoint', add([event.x, event.y], offset)]);
+            command(unit.id, 'add_waypoint', add([event.x, event.y], offset));
             offset = add(offset, [12, 0]);
           }
         }
