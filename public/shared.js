@@ -172,8 +172,8 @@ Drone.prototype.tick = function() {
   if(this.waypoints.length !== 0) {
     let target = this.waypoints[0];
     let dir_vec = add(target, inv(this.position));
-    let target_vel = scale(norm(dir_vec), (Math.sqrt(1+8*leng(dir_vec))-1)/2);
-    if(Math.abs(dir_vec[0]) < EPSILON && Math.abs(dir_vec[1]) < EPSILON) {
+    let target_vel = scale(norm(dir_vec), this.max_acceleration() * (Math.sqrt(1+8*leng(dir_vec)/this.max_acceleration())-1)/2);
+    if(Math.abs(dir_vec[0]) < EPSILON && Math.abs(dir_vec[1]) < EPSILON && leng(this.velocity) < this.max_acceleration()) {
       this.waypoints.shift();
       target_vel = [0, 0];
     }
@@ -191,6 +191,7 @@ Drone.prototype.create = function(stats) {
 
 Drone.prototype.attack = function (other_id) {
   let other = this.arena.units[other_id];
+  if (!other) return;
   if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
     console.log('In range')
     other.decrease_stats(this.weapon_damage());
