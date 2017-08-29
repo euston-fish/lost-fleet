@@ -154,6 +154,8 @@
         }
       } else if (event.key == 'a') {
         selected = arena.users[me].units;
+      } else if (event.key == 'Delete' || event.key == 'Backspace') {
+        Object.values(selected).forEach((unit) => command(unit.id, 'destroy'))
       }
     });
 
