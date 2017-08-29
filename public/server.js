@@ -25,10 +25,6 @@ module.exports = function(socket) {
         console.log('executing command', command);
         arena.receive(command);
       }
-      //for (var [destination, ...params] of tick_commands) {
-        //console.log(destination, ...params);
-        //state.units[destination].receive(...params);
-      //}
       arena.tick();
       for(socket of Object.values(sockets)) {
         socket.emit('tick', tick_commands);
@@ -36,15 +32,15 @@ module.exports = function(socket) {
     }, 100);
   }
 
-  let socket_id = socket.id
-
+  let socket_id = socket.id;
   sockets[socket_id] = socket;
-  //new Drone({ owner_id: user.id, position: [50, 50] });
-  //new Drone({ owner_id: user.id, position: [60, 60] });
-  //new Drone({ owner_id: user.id, position: [40, 60] });
   
   let color = user_colors.splice(Math.floor(Math.random() * user_colors.length), 1);
-  commands.push(['introduce_user', { id: socket_id, color: color, units: [{ position: [50, 50] }, { position: [60, 60] }, { position: [40, 60] }]}]);
+  commands.push(['introduce_user', {
+    id: socket_id,
+    color: color,
+    units: [{ position: [50, 50], stats: [255, 255, 255] }]
+  }]);
   
   socket.on('disconnect', () => {
     console.log('Disconnected: ' + socket_id);
