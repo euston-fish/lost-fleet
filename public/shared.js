@@ -90,6 +90,11 @@ Unit.prototype.in_region = function([tl_x, tl_y], [br_x, br_y]) {
   return tl_x-5 < x && x < br_x+5 && tl_y-5 < y && y < br_y+5;
 }
 
+Unit.prototype.destroy = function() {
+  delete this.arena.units[this.id];
+  delete this.arena.users[this.owner.id].units[this.id];
+}
+
 function add([x, y], [z, w]) {
   return [x+z, y+w];
 }
@@ -111,6 +116,10 @@ function leng([x, y]) {
   return Math.sqrt(x*x+y*y);
 }
 
+function clamp(val) {
+  return Math.max(0, Math.min(255, val))
+}
+
 function Drone(arena, { stats: stats, waypoints: waypoints, velocity: velocity, ...rest }) {
     Unit.call(this, arena, rest);
     this.stats = stats || [128, 128, 128];
@@ -122,6 +131,20 @@ Drone.prototype = Object.create(Unit.prototype, {});
 
 Drone.prototype.max_acceleration = function() {
   return this.stats[0] / 30.0;
+}
+
+Drone.prototype.weapon_range = function() {
+  return 200; //Math.max(Math.abs(this.stats[0] - this.stats[1]), 20);
+}
+
+Drone.prototype.weapon_damage = function() {
+  return 100;//this.stats[2] / 11;
+}
+
+Drone.prototype.decrease_stats = function(amount) {
+  [0,1,2].forEach((i) => this.stats[i] = clamp(this.stats[i] - amount));
+  // FUCK YES THIS IS THE BEST JAVASCRIPT IS MY FAVORITE LANGUAGE EVA!!!!1111!!!
+  if (this.stats == '0,0,0') this.destroy();
 }
 
 Drone.prototype.serialize = function() {
@@ -165,3 +188,12 @@ Drone.prototype.tick = function() {
 Drone.prototype.create = function(stats) {
   let d = new Drone(this.arena, { owner_id: this.owner.id, position: add(this.position, [10, 10]), stats: stats});
 }
+
+Drone.prototype.attack = function (other_id) {
+  let other = this.arena.units[other_id];
+  if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
+    console.log('In range')
+    other.decrease_stats(this.weapon_damage());
+  }
+}
+

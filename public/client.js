@@ -4,6 +4,20 @@
   let slider_vals, el;
   let arena;
 
+  {
+    let old_destroy = Unit.prototype.destroy;
+    Unit.prototype.destroy = function() {
+      old_destroy.call(this);
+      if (this.owner.id === me) {
+        for (let group of Object.values(selection_groups)) {
+          delete group[this.id];
+        }
+        delete selected[this.id];
+      }
+    }
+  }
+
+
   Unit.prototype.draw = function(ctx) {
     let [x, y] = this.position;
     ctx.beginPath();
@@ -21,7 +35,7 @@
     if(selection_start !== null && cursor_location !== null) {
       ctx.strokeRect(...selection_start, ...add(cursor_location, inv(selection_start)));
     }
-    if(arena) {
+    if (arena) {
       Object.values(arena.units).forEach((unit) => unit.draw(ctx));
     }
     window.requestAnimationFrame(draw);
@@ -87,8 +101,8 @@
 
     elem.addEventListener('mouseup', (event) => {
       event.preventDefault();
-      if(event.button === 0) {
-        cursor_location = [event.x, event.y];
+      cursor_location = [event.x, event.y];
+      if (event.button === 0) {
         if(selection_start === null) selection_start = cursor_location;
         let tl_x = Math.min(selection_start[0], cursor_location[0]);
         let tl_y = Math.min(selection_start[1], cursor_location[1]);
@@ -97,33 +111,40 @@
         selection_start = null;
         selected = {};
         let item;
-        for(let unit of Object.values(arena.users[me].units)) {
-          if(unit.in_region([tl_x, tl_y], [br_x, br_y])) {
+        for (let unit of Object.values(arena.users[me].units)) {
+          if (unit.in_region([tl_x, tl_y], [br_x, br_y])) {
             selected[unit.id] = unit;
           }
         }
         show_selected();
-      } else if(event.button === 2) {
+      } else if (event.button === 2) {
         let offset = [0, 0]
-        for(var unit of Object.values(selected)) {
-          console.log('sending move for unit', unit);
-          if(!event.altKey) socket.emit('command', [unit.id, 'clear_waypoints']);
-          socket.emit('command', [unit.id, 'add_waypoint', add([event.x, event.y], offset)]);
-          offset = add(offset, [12, 0]);
+        let target = Object.values(arena.units).find((unit) =>
+          unit.in_region(cursor_location, cursor_location) && unit.owner.id !== me);
+
+        for (var unit of Object.values(selected)) {
+          if (target) {
+            socket.emit('command', [unit.id, 'attack', target.id]);
+          } else {
+            if (!event.altKey) {
+              socket.emit('command', [unit.id, 'clear_waypoints']);
+            }
+            socket.emit('command', [unit.id, 'add_waypoint', add([event.x, event.y], offset)]);
+            offset = add(offset, [12, 0]);
+          }
         }
       }
     });
 
     document.addEventListener('keydown', (event) => {
       if(/^\d$/.test(event.key)) {
-        console.log('number pressed');
-        if(event.ctrlKey) {
+        if (event.ctrlKey) {
           selection_groups[event.key] = selected;
         } else {
           // TODO: if units get deleted, this might break
           selected = selection_groups[event.key] || {};
         }
-      } else if(event.key == 'a') {
+      } else if (event.key == 'a') {
         selected = arena.users[me].units;
       }
     });
