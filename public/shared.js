@@ -115,9 +115,10 @@ function Drone(arena, { stats: stats, target: target, ...rest }) {
     this.stats = stats || [128, 128, 128];
     this.target = target || null;
     this.speed = Drone.top_speed(this);
+    this.velocity = [0, 0];
 }
 
-Drone.top_speed = (self) => self.stats[0] / 12.8;
+Drone.top_speed = (self) => self.stats[0] / 30.0;
 
 Drone.prototype = Object.create(Unit.prototype, {});
 
@@ -139,7 +140,19 @@ Drone.prototype.move_to = function(target) {
 }
 
 Drone.prototype.tick = function() {
-  if(this.target !== null) this.position = move_towards(this.position, this.target, this.speed);
+  if(this.target !== null) {
+    let dir_vec = add(this.target, inv(this.position));
+    let target_vel = scale(norm(dir_vec), (Math.sqrt(1+8*leng(dir_vec))-1)/2);
+    if(dir_vec[0] === 0 && dir_vec[1] === 0) {
+      this.target = null;
+      target_vel = [0, 0];
+    }
+    
+    let acceleration = scale(norm(add(target_vel, inv(this.velocity))), Math.min(this.speed, leng(add(target_vel, inv(this.velocity)))));
+    console.log(acceleration);
+    this.velocity = add(this.velocity, acceleration);
+  }
+  this.position = add(this.position, this.velocity);
 }
 
 Drone.prototype.create = function(stats) {
