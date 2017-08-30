@@ -5,6 +5,8 @@
   let arena;
   let view_center = [0, 0];
   let zoom = 1;
+  let resource_display;
+  let moi = () => arena.users[me];
 
   let game_to_screen = (game_pos) => {
     // screen_pos = center + (game_pos - view_center) * zoom
@@ -36,9 +38,19 @@
     }
   }
 
-
   Unit.prototype.draw = function(ctx) {
     let [x, y] = game_to_screen(this.position);
+    let other;
+    if (other = arena.units[this.target_id]) {
+      if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
+        ctx.strokeStyle = this.owner.color;
+        ctx.beginPath();
+        ctx.lineWidth = 4;
+        ctx.moveTo(...[x, y]);
+        ctx.lineTo(...game_to_screen(other.position));
+        ctx.stroke();
+      }
+    }
     ctx.beginPath();
     ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
     ctx.fillStyle = this.color();
@@ -54,6 +66,7 @@
       ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom + 5, 0, Math.PI * 2);
       ctx.stroke();
     }
+    resource_display.innerText = moi() && moi().resources.map(Math.floor);
   }
 
   let draw = () => {
@@ -98,6 +111,7 @@
     socket = io({ upgrade: false, transports: ["websocket"] });
     let command = (...args) => socket.emit('command', args)
     let elem = el('c');
+    resource_display = el('resources');
     ctx = elem.getContext('2d');
     socket.on('tick', handle_tick);
 
@@ -114,7 +128,12 @@
 
     el('create').onclick = () => {
       if (Object.values(selected)[0]) {
-        command(Object.values(selected)[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]);
+        let cost = [slider_vals.r, slider_vals.g, slider_vals.b];
+        let subtracted = moi().subtracted_resources(...cost);
+        if (subtracted != '0,0,0') {
+          moi().resources = subtracted;
+          command(Object.values(selected)[0].id, 'create', );
+        }
       }
     };
 
@@ -154,7 +173,7 @@
 
         for (var unit of Object.values(selected)) {
           if (target) {
-            command(unit.id, 'attack', target.id);
+            command(unit.id, 'set_target', target.id);
           } else {
             offset = add(offset, [unit.radius() + 2, 0]);
             if (!event.altKey) {

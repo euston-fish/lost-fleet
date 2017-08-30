@@ -6,12 +6,14 @@ function Unit(arena, { id: id,
                 owner_id: owner_id,
                 position: position,
                 stats: stats,
+                target_id: target_id,
                 waypoints: waypoints,
                 velocity: velocity }) {
   this.arena = arena;
   this.id = (id !== undefined) ? id : arena.id_counter++;
   this.owner = arena.users[owner_id];
   this.position = position;
+  this.target_id = target_id;
   this.owner.units[this.id] = this;
   arena.units[this.id] = this;
   this.stats = stats || [128, 128, 128];
@@ -40,14 +42,15 @@ Unit.prototype.receive = function(command, ...params) {
 Unit.prototype.tick = function() {
   this.velocity = add(this.velocity, this.acceleration());
   this.position = add(this.position, this.velocity);
+  this.attack_target();
 }
 
 /// Properties ///
 //
-// These properties are based on the user's stats
+// These properties are based on the unit's stats
 
 Unit.prototype.color = function() {
-  return 'rgb(' + this.stats + ')';
+  return 'rgb(' + this.stats.map(Math.floor) + ')';
 }
 
 Unit.prototype.radius = function () {
@@ -63,7 +66,11 @@ Unit.prototype.weapon_range = function() {
 }
 
 Unit.prototype.weapon_damage = function() {
-  return 100;//this.stats[2] / 11;
+  return this.stats[2] / 11;
+}
+
+Unit.prototype.mine_efficiency = function() {
+  return 0.9 * this.weapon_damage();
 }
 
 /// Commands ///
@@ -72,6 +79,7 @@ Unit.prototype.weapon_damage = function() {
 
 Unit.prototype.add_waypoint = function(waypoint) {
   // Add a new waypoint
+  this.target_id = null;
   this.waypoints.push(waypoint);
 }
 
@@ -82,16 +90,25 @@ Unit.prototype.clear_waypoints = function() {
 
 Unit.prototype.create = function(stats) {
   // Have a unit baby
-  let d = new Unit(this.arena, { owner_id: this.owner.id, position: add(this.position, [10, 10]), stats: stats});
+  new Unit(this.arena, { owner_id: this.owner.id, position: add(this.position, [10, 10]), stats: stats});
 }
 
-Unit.prototype.attack = function (other_id) {
+Unit.prototype.set_target = function (target) {
+  this.target_id = target;
+}
+
+Unit.prototype.attack_target = function () {
   // Attack another unit
-  let other = this.arena.units[other_id];
-  if (!other) return;
-  if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
-    console.log('In range')
+  let other = this.arena.units[this.target_id];
+  if (!other) {
+    this.target_id = null;
+  } else if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
+    this.owner.mine_resource(other.stats, this.mine_efficiency())
     other.decrease_stats(this.weapon_damage());
+  } else {
+    this.clear_waypoints();
+    this.add_waypoint(other.position);
+    this.target_id = other.id;
   }
 }
 

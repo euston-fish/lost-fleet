@@ -1,56 +1,24 @@
 const EPSILON=1;
 
-function add([x, y], [z, w]) {
-  return [x+z, y+w];
-}
-
-function inv([x, y]) {
-  return [-x, -y];
-}
-
-function sub(a, b) {
-  // subtract b from a
-  return add(a, inv(b));
-}
-
-function scale([x, y], f) {
-  return [f*x, f*y];
-}
-
-function norm([x, y]) {
-  let l = leng([x, y]);
-  if(l === 0) return [0, 0];
-  return [x/l, y/l];
-}
-
-function leng([x, y]) {
-  return Math.sqrt(x*x+y*y);
-}
-
-function clamp(val) {
-  return Math.max(0, Math.min(255, val))
-}
-
-function mix(val, min, max) {
-  return min + (max - min) * val;
-}
-
-function sign(x) {
-  if (x < 0) return -1;
-  else if (x > 0) return 1;
-  else return 0;
-}
-
-function combine(fx, fy) {
-  return function(a, b) {
-    return [fx(a[0], b[0]), fy(a[1], b[1])];
-  }
-}
-
-let tl = combine(Math.min, Math.min);
-let tr = combine(Math.max, Math.min);
-let bl = combine(Math.min, Math.max);
-let br = combine(Math.max, Math.max);
+let
+  min = Math.min,
+  max = Math.max,
+  add = ([x, y], [z, w]) => [x+z, y+w],
+  inv = ([x, y]) => [-x, -y],
+  sub = (a, b) => add(a, inv(b)),
+  scale = ([x, y], f) => [f*x, f*y],
+  leng = ([x, y]) => Math.sqrt(x*x+y*y),
+  norm = (a) => {
+    let l = leng(a);
+    return (l !== 0) ? scale(a, 1/l) : [0, 0];
+  },
+  clamp = (val) => Math.max(0, val),
+  mix = (val, min, max) => min + (max - min) * val,
+  combine = (fx, fy) => ((a, b) => [fx(a[0], b[0]), fy(a[1], b[1])]),
+  tl = combine(min, min),
+  tr = combine(max, min),
+  bl = combine(min, max),
+  br = combine(max, max);
 
 function in_rounded_rectangle(point, radius, corner_a, corner_b) {
   console.log(point, radius, corner_a, corner_b);
