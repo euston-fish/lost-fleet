@@ -50,7 +50,7 @@ Unit.prototype.tick = function() {
 // These properties are based on the unit's stats
 
 Unit.prototype.color = function() {
-  return 'rgb(' + this.stats + ')';
+  return 'rgb(' + this.stats.map(Math.floor) + ')';
 }
 
 Unit.prototype.radius = function () {

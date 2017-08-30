@@ -24,7 +24,7 @@
     let other;
     if (other = arena.units[this.target_id]) {
       if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
-        ctx.strokeStyle = 'red';
+        ctx.strokeStyle = this.owner.color;
         ctx.beginPath();
         ctx.lineWidth = 4;
         ctx.moveTo(...this.position);
