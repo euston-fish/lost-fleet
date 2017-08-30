@@ -27,7 +27,7 @@
 
   {
     let old_destroy = Unit.prototype.destroy;
-    Unit.prototype.destroy = function() {
+    Unit.prototype.destroy = function(user_was_removed) {
       old_destroy.call(this);
       if (this.owner.id === me) {
         for (let group of Object.values(selection_groups)) {
@@ -35,7 +35,7 @@
         }
         delete selected[this.id];
       }
-      if (Object.values(arena.users).length != 1) {
+      if (!user_was_removed && Object.values(arena.users).length != 1) {
         if (Object.values(moi().units).length === 0) {
           el('c').style.backgroundColor = '#781A05';
         } else if (Object.values(arena.units).filter((unit) => unit.owner.id != me).length === 0) {
@@ -131,7 +131,7 @@
         let subtracted = moi().subtracted_resources(...cost);
         if (subtracted != '0,0,0') {
           moi().resources = subtracted;
-          command(Object.values(selected)[0].id, 'create', );
+          command(Object.values(selected)[0].id, 'create', cost);
         }
       }
     };
@@ -158,9 +158,11 @@
         if(selection_start === null) selection_start = cursor_location;
         selected = {};
         let item;
-        for (let unit of Object.values(arena.users[me].units)) {
-          if (in_rounded_rectangle(unit.position, unit.radius() / zoom, cursor_location, selection_start)) {
-            selected[unit.id] = unit;
+        if (moi()) {
+          for (let unit of Object.values(arena.users[me].units)) {
+            if (in_rounded_rectangle(unit.position, unit.radius() / zoom, cursor_location, selection_start)) {
+              selected[unit.id] = unit;
+            }
           }
         }
         selection_start = null;
