@@ -13,7 +13,8 @@ function scale([x, y], f) {
 }
 
 function norm([x, y]) {
-  let l = Math.sqrt(x*x+y*y);
+  let l = leng([x, y]);
+  if(l === 0) return [0, 0];
   return [x/l, y/l];
 }
 

@@ -120,6 +120,8 @@ Unit.prototype.acceleration = function() {
     
     let d_accel = add(target_vel, inv(this.velocity));
     return scale(norm(d_accel), Math.min(this.max_acceleration(), leng(d_accel)));
+  } else {
+    // Accelerate so that velocity becomes zero
+    return scale(norm(inv(this.velocity)), Math.min(this.max_acceleration(), leng(this.velocity)));
   }
-  return [0, 0]
 }
