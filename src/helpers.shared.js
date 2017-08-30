@@ -27,11 +27,11 @@ function in_rounded_rectangle(point, radius, corner_a, corner_b) {
   let tr_ = tr(corner_a, corner_b);
   let bl_ = bl(corner_a, corner_b);
   if(tl_[0] < point[0] && point[0] < br_[0]) {
-    if(tl_[0] - radius < point[0] && point[0] < br_[0] + radius) return true;
+    if(tl_[1] - radius < point[1] && point[1] < br_[1] + radius) return true;
     else return false;
   }
   if(tl_[1] < point[1] && point[1] < br_[1]) {
-    if(tl_[1] - radius < point[1] && point[1] < br_[1] + radius) return true;
+    if(tl_[0] - radius < point[0] && point[0] < br_[0] + radius) return true;
     else return false;
   }
   if(Math.min(leng(sub(point, tl_)),
