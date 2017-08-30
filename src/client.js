@@ -9,6 +9,7 @@
   let moi = () => arena.users[me];
   let pressed_keys = {};
   let ui_state = { mode: 'NONE' };
+  let canvas;
 
   let game_to_screen = (game_pos) => {
     // screen_pos = center + (game_pos - view_center) * zoom
@@ -29,7 +30,7 @@
 
   {
     let old_destroy = Unit.prototype.destroy;
-    Unit.prototype.destroy = function() {
+    Unit.prototype.destroy = function(user_was_removed) {
       old_destroy.call(this);
       if (this.owner.id === me) {
         for (let group of Object.values(selection_groups)) {
@@ -37,10 +38,29 @@
         }
         delete selected[this.id];
       }
+      if (!user_was_removed && Object.values(arena.users).length != 1) {
+        if (Object.values(moi().units).length === 0) {
+          el('c').style.backgroundColor = '#781A05';
+        } else if (Object.values(arena.units).filter((unit) => unit.owner.id != me).length === 0) {
+          el('c').style.backgroundColor = '#078219';
+        }
+      }
     }
   }
 
-  Unit.prototype.draw = function(ctx) {
+  draw_triangle = ([x, y], size, rotation) => {
+    ctx.beginPath();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.moveTo(0, -size);
+    ctx.lineTo(size, size);
+    ctx.lineTo(-size, size);
+    ctx.fill();
+    ctx.rotate(-rotation);
+    ctx.translate(-x, -y);
+  }
+
+  Unit.prototype.draw = function() {
     let [x, y] = game_to_screen(this.position);
     let other;
     if (other = arena.units[this.target_id]) {
@@ -53,14 +73,17 @@
         ctx.stroke();
       }
     }
-    ctx.beginPath();
-    ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
-    ctx.fillStyle = this.color();
-    ctx.fill();
-    ctx.strokeStyle = this.owner.color;
-    ctx.lineWidth = 3;
-    ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
-    ctx.stroke();
+    // ctx.beginPath();
+    ctx.fillStyle = this.owner.color;
+    draw_triangle([x, y], this.radius() / 2, this.rotation);
+    // ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
+    // ctx.fillStyle = this.color();
+    // ctx.fill();
+    // ctx.beginPath();
+    // ctx.strokeStyle = this.owner.color;
+    // ctx.lineWidth = 3;
+    // ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
+    // ctx.stroke();
     if (selected[this.id]) {
       ctx.beginPath();
       ctx.strokeStyle = 'orange'
@@ -87,7 +110,7 @@
       ctx.strokeRect(...ui_state.origin, ...add(cursor_location, inv(ui_state.origin)));
     }
     if (arena) {
-      Object.values(arena.units).forEach((unit) => unit.draw(ctx));
+      Object.values(arena.units).forEach((unit) => unit.draw());
     }
     window.requestAnimationFrame(draw);
   }
@@ -100,21 +123,13 @@
     arena.tick();
   }
 
-  show_selected = () => {
-    let info_pane = el('selected');
-    info_pane.innerHTML = '';
-    Object.values(selected).forEach((unit) => {
-      info_pane.innerHTML += unit.stats + '<br>';
-    });
-  };
-
   init = () => {
     el = (id) => document.getElementById(id);
     socket = io({ upgrade: false, transports: ["websocket"] });
     let command = (...args) => socket.emit('command', args)
-    let elem = el('c');
+    canvas = el('c');
     resource_display = el('resources');
-    ctx = elem.getContext('2d');
+    ctx = canvas.getContext('2d');
     socket.on('tick', handle_tick);
 
     slider_vals = {};
@@ -134,28 +149,28 @@
         let subtracted = moi().subtracted_resources(...cost);
         if (subtracted != '0,0,0') {
           moi().resources = subtracted;
-          command(Object.values(selected)[0].id, 'create', );
+          command(Object.values(selected)[0].id, 'create', cost);
         }
       }
     };
 
-    elem.addEventListener('contextmenu', (event) => event.preventDefault());
+    canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
-    elem.addEventListener('mousedown', (event) => {
+    canvas.addEventListener('mousedown', (event) => {
       cursor_location = [event.x, event.y];
     });
-    elem.addEventListener('mousemove', (event) => cursor_location = [event.x, event.y]);
-    elem.addEventListener('mouseup', (event) => {
+    canvas.addEventListener('mousemove', (event) => cursor_location = [event.x, event.y]);
+    canvas.addEventListener('mouseup', (event) => {
       cursor_location = [event.x, event.y]
     });
 
-    elem.addEventListener('mousemove', (event) => {
+    canvas.addEventListener('mousemove', (event) => {
       if (ui_state.mode === 'PAN') {
         view_center = add(ui_state.original_view_center, sub(ui_state.origin, cursor_location));
       }
     });
 
-    elem.addEventListener('mousedown', (event) => {
+    canvas.addEventListener('mousedown', (event) => {
       console.log('mousedown');
       if(event.button === 0) {
         if(pressed_keys['p']) {
@@ -167,21 +182,22 @@
       console.log(ui_state);
     });
 
-    elem.addEventListener('mousemove', (event) => {
+    canvas.addEventListener('mousemove', (event) => {
     });
 
-    elem.addEventListener('mouseup', (event) => {
+    canvas.addEventListener('mouseup', (event) => {
       console.log('mouseup');
       console.log(ui_state);
       if (ui_state.mode === 'SELECT') {
         selected = {};
         let item;
-        for (let unit of Object.values(arena.users[me].units)) {
-          if (in_rounded_rectangle(unit.position, unit.radius() / zoom, screen_to_game(cursor_location), screen_to_game(ui_state.origin))) {
-            selected[unit.id] = unit;
+        if (moi()) {
+          for (let unit of Object.values(arena.users[me].units)) {
+            if (in_rounded_rectangle(unit.position, unit.radius() / zoom, screen_to_game(cursor_location), screen_to_game(ui_state.origin))) {
+              selected[unit.id] = unit;
+            }
           }
         }
-        show_selected();
       } else if (event.button === 2) {
         let offset = [0, 0]
         let target = Object.values(arena.units).find((unit) =>
@@ -202,7 +218,7 @@
       }
     });
 
-    elem.addEventListener('mouseup', (event) => ui_state = { mode: 'NONE' });
+    canvas.addEventListener('mouseup', (event) => ui_state = { mode: 'NONE' });
 
     document.addEventListener('keydown', (event) => {
       pressed_keys[event.key] = event;

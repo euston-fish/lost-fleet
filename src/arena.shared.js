@@ -37,7 +37,7 @@ Arena.handlers.command_unit = function(id, ...params) {
 Arena.handlers.remove_user = function(user_id) {
   console.log(this);
   for (let unit of Object.values(this.users[user_id].units)) {
-    unit.destroy();
+    unit.destroy(true);
   }
   delete this.users[user_id];
 }
