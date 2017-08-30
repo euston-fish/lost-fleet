@@ -2,11 +2,30 @@
 
 set -e
 
+older_than() {
+  local target="$1"
+  shift
+  if [ ! -e "$target" ] # target hasn't been created
+  then
+    return 0
+  fi
+  local f
+  for f in "$@"
+  do
+    if [ "$f" -nt "$target" ] # dependency is newer than target
+    then
+      return 0
+    fi
+  done
+  return 1  # target exists and is newer than dependencies
+}
+
 SOURCES='src/*'
 
 UGLIFY_OPTS='-c -m'
 
-rm -rf public
+#rm -rf public
+# TODO: we never remove files from public now...
 mkdir -p public
 
 for file in $SOURCES
@@ -22,7 +41,9 @@ do
       SERVER_SOURCES="$SERVER_SOURCES $file"
     ;;
     *.js)
-      uglifyjs $UGLIFY_OPTS --output public${file#src} -- $file
+      older_than public${file#src} $file && uglifyjs $UGLIFY_OPTS --output public${file#src} -- $file
+    ;;
+    *.swp)
     ;;
     *)
       cp $file public${file#src}
@@ -30,9 +51,9 @@ do
   esac
 done
 
-uglifyjs $UGLIFY_OPTS --output public/shared.js -- $SHARED_SOURCES
-uglifyjs $UGLIFY_OPTS --output public/client.js -- $CLIENT_SOURCES
-uglifyjs $UGLIFY_OPTS --output public/server.js -- $SERVER_SOURCES
+older_than public/shared.js $SHARED_SOURCES && uglifyjs $UGLIFY_OPTS --output public/shared.js -- $SHARED_SOURCES
+older_than public/client.js $CLIENT_SOURCES && uglifyjs $UGLIFY_OPTS --output public/client.js -- $CLIENT_SOURCES
+older_than public/server.js $SERVER_SOURCES && uglifyjs $UGLIFY_OPTS --output public/server.js -- $SERVER_SOURCES
 
 rm -f final.zip
 zip -9 -r final.zip public
