@@ -55,21 +55,24 @@ older_than public/shared.js $SHARED_SOURCES && uglifyjs $UGLIFY_OPTS --output pu
 older_than public/client.js $CLIENT_SOURCES && uglifyjs $UGLIFY_OPTS --output public/client.js -- $CLIENT_SOURCES
 older_than public/server.js $SERVER_SOURCES && uglifyjs $UGLIFY_OPTS --output public/server.js -- $SERVER_SOURCES
 
-rm -f final.zip
-zip -9 -r final.zip public
+if [ "$1" = skip ]
+then
+  rm -f final.zip
+  zip -9 -r final.zip public
 
-if [ $(uname) = Darwin ]; then
-  flag=-f%z
-else
-  flag=-c%s
-fi
-size="$(stat $flag final.zip)"
-(( percent = size * 100 / 13312 ))
+  if [ $(uname) = Darwin ]; then
+    flag=-f%z
+  else
+    flag=-c%s
+  fi
+  size="$(stat $flag final.zip)"
+  (( percent = size * 100 / 13312 ))
 
-echo "Size is $size"
-if [ $size -gt 13312 ]; then
-  echo "Too big!"
-  exit 1
-else
-  echo "Percentage: $percent"
+  echo "Size is $size"
+  if [ $size -gt 13312 ]; then
+    echo "Too big!"
+    exit 1
+  else
+    echo "Percentage: $percent"
+  fi
 fi
