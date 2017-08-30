@@ -114,11 +114,6 @@ Unit.prototype.attack_target = function () {
 
 /// Helpers ///
 
-Unit.prototype.in_region = function([tl_x, tl_y], [br_x, br_y]) {
-  let [x, y] = this.position;
-  return tl_x-this.radius() < x && x < br_x+this.radius() && tl_y-this.radius() < y && y < br_y+this.radius();
-}
-
 Unit.prototype.decrease_stats = function(amount) {
   [0,1,2].forEach((i) => this.stats[i] = clamp(this.stats[i] - amount));
   // FUCK YES THIS IS THE BEST JAVASCRIPT IS MY FAVORITE LANGUAGE EVA!!!!1111!!!
@@ -137,6 +132,8 @@ Unit.prototype.acceleration = function() {
     
     let d_accel = add(target_vel, inv(this.velocity));
     return scale(norm(d_accel), Math.min(this.max_acceleration(), leng(d_accel)));
+  } else {
+    // Accelerate so that velocity becomes zero
+    return scale(norm(inv(this.velocity)), Math.min(this.max_acceleration(), leng(this.velocity)));
   }
-  return [0, 0]
 }
