@@ -2,14 +2,21 @@
 
 set -e
 
-SOURCE='public/*.js'
+SOURCE='public/*'
 
 rm -rf target
 mkdir -p target/public
 
 for file in $SOURCE
 do
-  uglifyjs -c -m --output target/${file%.js}.min.js -- $file
+  case $file in
+    *.js)
+      uglifyjs -c -m --output target/${file%.js}.min.js -- $file
+    ;;
+    *)
+      cp $file target/$file
+    ;;
+  esac
 done
 
 rm -f final.zip

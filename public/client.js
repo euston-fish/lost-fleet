@@ -38,6 +38,8 @@
   }
 
   let draw = () => {
+    ctx.canvas.width = window.innerWidth;
+    ctx.canvas.height = window.innerHeight;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.strokeStyle = 'white';
     if(selection_start !== null && cursor_location !== null) {
@@ -71,8 +73,6 @@
     let command = (...args) => socket.emit('command', args)
     let elem = el('c');
     ctx = elem.getContext('2d');
-    ctx.canvas.width = window.innerWidth;
-    ctx.canvas.height = window.innerHeight;
     socket.on('tick', handle_tick);
 
     slider_vals = {};
