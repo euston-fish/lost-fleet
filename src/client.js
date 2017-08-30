@@ -17,6 +17,13 @@
         }
         delete selected[this.id];
       }
+      if (Object.values(arena.users).length != 1) {
+        if (Object.values(moi().units).length === 0) {
+          el('c').style.backgroundColor = '#781A05';
+        } else if (Object.values(arena.units).filter((unit) => unit.owner.id != me).length === 0) {
+          el('c').style.backgroundColor = '#078219';
+        }
+      }
     }
   }
 
@@ -72,14 +79,6 @@
     }
     arena.tick();
   }
-
-  show_selected = () => {
-    let info_pane = el('selected');
-    info_pane.innerHTML = '';
-    Object.values(selected).forEach((unit) => {
-      info_pane.innerHTML += unit.stats + '<br>';
-    });
-  };
 
   init = () => {
     el = (id) => document.getElementById(id);
@@ -144,7 +143,6 @@
             selected[unit.id] = unit;
           }
         }
-        show_selected();
       } else if (event.button === 2) {
         let offset = [0, 0]
         let target = Object.values(arena.units).find((unit) =>
