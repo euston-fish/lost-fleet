@@ -95,38 +95,22 @@ Unit.prototype.destroy = function() {
   delete this.arena.users[this.owner.id].units[this.id];
 }
 
-function add([x, y], [z, w]) {
-  return [x+z, y+w];
-}
-
-function inv([x, y]) {
-  return [-x, -y];
-}
-
-function scale([x, y], f) {
-  return [f*x, f*y];
-}
-
-function norm([x, y]) {
-  let l = Math.sqrt(x*x+y*y);
-  return [x/l, y/l];
-}
-
-function leng([x, y]) {
-  return Math.sqrt(x*x+y*y);
-}
-
-function clamp(val) {
-  return Math.max(0, Math.min(255, val))
-}
-
-function mix(val, min, max) {
-  return min + (max - min) * val;
-}
+let
+  add = ([x, y], [z, w]) => [x+z, y+w],
+  inv = ([x, y]) => [-x, -y],
+  scale = ([x, y], f) => [f*x, f*y],
+  norm = ([x, y]) => {
+    let l = Math.sqrt(x*x+y*y);
+    return [x/l, y/l];
+  },
+  leng = ([x, y]) => Math.sqrt(x*x+y*y),
+  clamp = (val) => Math.max(0, Math.min(255, val)),
+  mix = (val, min, max) => min + (max - min) * val;
 
 function Drone(arena, {
   mothership: mothership,
   stats: stats,
+  target_id: target_id,
   waypoints: waypoints,
   velocity: velocity,
   ...rest }) {
@@ -163,7 +147,7 @@ Drone.prototype.serialize = function() {
     stats: this.stats,
     waypoints: this.waypoints,
     velocity: this.velocity,
-    mothership: this.mothership
+    target_id: this.target_id,
   }, Unit.prototype.serialize.call(this));
 }
 
@@ -199,18 +183,26 @@ Drone.prototype.tick = function() {
     this.velocity = add(this.velocity, acceleration);
   }
   this.position = add(this.position, this.velocity);
+  this.attack_target();
 }
 
 Drone.prototype.create = function(stats) {
-  let d = new Drone(this.arena, { owner_id: this.owner.id, position: add(this.position, [10, 10]), stats: stats});
+  new Drone(this.arena, { owner_id: this.owner.id, position: add(this.position, [10, 10]), stats: stats});
 }
 
-Drone.prototype.attack = function (other_id) {
-  let other = this.arena.units[other_id];
-  if (!other) return;
-  if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
-    console.log('In range')
+Drone.prototype.set_target = function(target) {
+  this.target_id = target;
+}
+
+Drone.prototype.attack_target = function() {
+  let other = this.arena.units[this.target_id];
+  if (!other) {
+    this.target_id = null;
+  } else if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
     other.decrease_stats(this.weapon_damage());
+  } else {
+    this.clear_waypoints();
+    this.add_waypoint(other.position);
   }
 }
 

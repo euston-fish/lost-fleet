@@ -19,6 +19,17 @@
 
 
   Unit.prototype.draw = function(ctx) {
+    let other;
+    if (other = arena.units[this.target_id]) {
+      if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
+        ctx.strokeStyle = 'red';
+        ctx.beginPath();
+        ctx.lineWidth = 4;
+        ctx.moveTo(...this.position);
+        ctx.lineTo(...other.position);
+        ctx.stroke();
+      }
+    }
     let [x, y] = this.position;
     ctx.beginPath();
     ctx.arc(Math.round(x), Math.round(y), this.radius(), 0, Math.PI * 2);
@@ -132,7 +143,7 @@
 
         for (var unit of Object.values(selected)) {
           if (target) {
-            command(unit.id, 'attack', target.id);
+            command(unit.id, 'set_target', target.id);
           } else {
             if (!event.altKey) {
               command(unit.id, 'clear_waypoints');
