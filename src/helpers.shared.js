@@ -21,7 +21,6 @@ let
   br = combine(max, max);
 
 function in_rounded_rectangle(point, radius, corner_a, corner_b) {
-  console.log(point, radius, corner_a, corner_b);
   let tl_ = tl(corner_a, corner_b);
   let br_ = br(corner_a, corner_b);
   let tr_ = tr(corner_a, corner_b);

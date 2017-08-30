@@ -1,5 +1,5 @@
 (function() {
-  let socket, ctx, me, mothership, selection_start, cursor_location, selected = {};
+  let socket, ctx, me, mothership, cursor_location, selected = {};
   let selection_groups = {};
   let slider_vals, el;
   let arena;
@@ -7,6 +7,8 @@
   let zoom = 1;
   let resource_display;
   let moi = () => arena.users[me];
+  let pressed_keys = {};
+  let ui_state = { mode: 'NONE' };
 
   let game_to_screen = (game_pos) => {
     // screen_pos = center + (game_pos - view_center) * zoom
@@ -81,8 +83,8 @@
       ctx.fill();
     }
     ctx.strokeStyle = 'white';
-    if(selection_start !== null && cursor_location !== null) {
-      ctx.strokeRect(...game_to_screen(selection_start), ...add(game_to_screen(cursor_location), inv(game_to_screen(selection_start))));
+    if(ui_state.mode === 'SELECT') {
+      ctx.strokeRect(...ui_state.origin, ...add(cursor_location, inv(ui_state.origin)));
     }
     if (arena) {
       Object.values(arena.units).forEach((unit) => unit.draw(ctx));
@@ -137,39 +139,53 @@
       }
     };
 
-    selection_start = null;
-
-    elem.addEventListener('contextmenu', (event) => { event.preventDefault(); });
+    elem.addEventListener('contextmenu', (event) => event.preventDefault());
 
     elem.addEventListener('mousedown', (event) => {
-      cursor_location = screen_to_game([event.x, event.y]);
-      if(event.button === 0) {
-        selection_start = cursor_location;
-      }
+      cursor_location = [event.x, event.y];
+    });
+    elem.addEventListener('mousemove', (event) => cursor_location = [event.x, event.y]);
+    elem.addEventListener('mouseup', (event) => {
+      cursor_location = [event.x, event.y]
     });
 
     elem.addEventListener('mousemove', (event) => {
-      cursor_location = screen_to_game([event.x, event.y]);
+      if (ui_state.mode === 'PAN') {
+        view_center = add(ui_state.original_view_center, sub(ui_state.origin, cursor_location));
+      }
+    });
+
+    elem.addEventListener('mousedown', (event) => {
+      console.log('mousedown');
+      if(event.button === 0) {
+        if(pressed_keys['p']) {
+          ui_state = { mode: 'PAN', origin: cursor_location, original_view_center: view_center };
+        } else {
+          ui_state = { mode: 'SELECT', origin: cursor_location };
+        }
+      }
+      console.log(ui_state);
+    });
+
+    elem.addEventListener('mousemove', (event) => {
     });
 
     elem.addEventListener('mouseup', (event) => {
-      event.preventDefault();
-      cursor_location = screen_to_game([event.x, event.y]);
-      if (event.button === 0) {
-        if(selection_start === null) selection_start = cursor_location;
+      console.log('mouseup');
+      console.log(ui_state);
+      if (ui_state.mode === 'SELECT') {
         selected = {};
         let item;
         for (let unit of Object.values(arena.users[me].units)) {
-          if (in_rounded_rectangle(unit.position, unit.radius() / zoom, cursor_location, selection_start)) {
+          if (in_rounded_rectangle(unit.position, unit.radius() / zoom, screen_to_game(cursor_location), screen_to_game(ui_state.origin))) {
             selected[unit.id] = unit;
           }
         }
-        selection_start = null;
         show_selected();
       } else if (event.button === 2) {
         let offset = [0, 0]
         let target = Object.values(arena.units).find((unit) =>
-          in_rounded_rectangle(unit.position, unit.radius() / zoom, cursor_location, cursor_location) && unit.owner.id !== me);
+          in_rounded_rectangle(unit.position, unit.radius() / zoom, screen_to_game(cursor_location), screen_to_game(cursor_location)) && unit.owner.id !== me);
 
         for (var unit of Object.values(selected)) {
           if (target) {
@@ -179,14 +195,17 @@
             if (!event.altKey) {
               command(unit.id, 'clear_waypoints');
             }
-            command(unit.id, 'add_waypoint', add(cursor_location, offset));
+            command(unit.id, 'add_waypoint', add(screen_to_game(cursor_location), offset));
             offset = add(offset, [unit.radius() + 2, 0]);
           }
         }
       }
     });
 
+    elem.addEventListener('mouseup', (event) => ui_state = { mode: 'NONE' });
+
     document.addEventListener('keydown', (event) => {
+      pressed_keys[event.key] = event;
       if(/^\d$/.test(event.key)) {
         if (event.ctrlKey) {
           selection_groups[event.key] = selected;
@@ -199,6 +218,10 @@
       } else if (event.key == 'Delete' || event.key == 'Backspace') {
         Object.values(selected).forEach((unit) => command(unit.id, 'destroy'))
       }
+    });
+
+    document.addEventListener('keyup', (event) => {
+      delete pressed_keys[event.key];
     });
 
     document.addEventListener('wheel', (event) => {
