@@ -18,7 +18,9 @@ let
   tl = combine(min, min),
   tr = combine(max, min),
   bl = combine(min, max),
-  br = combine(max, max);
+  br = combine(max, max),
+  towards = (from, to, inc) => from < to ? min(from + inc, to) : max(to, from - inc),
+  scalar_angle = ([dx, dy]) => Math.atan(dy / (dx || 1)) + (Math.PI * 1.5);
 
 function in_rounded_rectangle(point, radius, corner_a, corner_b) {
   console.log(point, radius, corner_a, corner_b);

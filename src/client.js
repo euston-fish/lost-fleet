@@ -7,6 +7,7 @@
   let zoom = 1;
   let resource_display;
   let moi = () => arena.users[me];
+  let canvas;
 
   let game_to_screen = (game_pos) => {
     // screen_pos = center + (game_pos - view_center) * zoom
@@ -45,7 +46,19 @@
     }
   }
 
-  Unit.prototype.draw = function(ctx) {
+  draw_triangle = ([x, y], size, rotation) => {
+    ctx.beginPath();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.moveTo(0, -size);
+    ctx.lineTo(size, size);
+    ctx.lineTo(-size, size);
+    ctx.fill();
+    ctx.rotate(-rotation);
+    ctx.translate(-x, -y);
+  }
+
+  Unit.prototype.draw = function() {
     let [x, y] = game_to_screen(this.position);
     let other;
     if (other = arena.units[this.target_id]) {
@@ -58,14 +71,17 @@
         ctx.stroke();
       }
     }
-    ctx.beginPath();
-    ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
-    ctx.fillStyle = this.color();
-    ctx.fill();
-    ctx.strokeStyle = this.owner.color;
-    ctx.lineWidth = 3;
-    ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
-    ctx.stroke();
+    // ctx.beginPath();
+    ctx.fillStyle = this.owner.color;
+    draw_triangle([x, y], this.radius() / 2, this.rotation);
+    // ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
+    // ctx.fillStyle = this.color();
+    // ctx.fill();
+    // ctx.beginPath();
+    // ctx.strokeStyle = this.owner.color;
+    // ctx.lineWidth = 3;
+    // ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
+    // ctx.stroke();
     if (selected[this.id]) {
       ctx.beginPath();
       ctx.strokeStyle = 'orange'
@@ -92,7 +108,7 @@
       ctx.strokeRect(...game_to_screen(selection_start), ...add(game_to_screen(cursor_location), inv(game_to_screen(selection_start))));
     }
     if (arena) {
-      Object.values(arena.units).forEach((unit) => unit.draw(ctx));
+      Object.values(arena.units).forEach((unit) => unit.draw());
     }
     window.requestAnimationFrame(draw);
   }
@@ -109,9 +125,9 @@
     el = (id) => document.getElementById(id);
     socket = io({ upgrade: false, transports: ["websocket"] });
     let command = (...args) => socket.emit('command', args)
-    let elem = el('c');
+    canvas = el('c');
     resource_display = el('resources');
-    ctx = elem.getContext('2d');
+    ctx = canvas.getContext('2d');
     socket.on('tick', handle_tick);
 
     slider_vals = {};
@@ -138,20 +154,20 @@
 
     selection_start = null;
 
-    elem.addEventListener('contextmenu', (event) => { event.preventDefault(); });
+    canvas.addEventListener('contextmenu', (event) => { event.preventDefault(); });
 
-    elem.addEventListener('mousedown', (event) => {
+    canvas.addEventListener('mousedown', (event) => {
       cursor_location = screen_to_game([event.x, event.y]);
       if(event.button === 0) {
         selection_start = cursor_location;
       }
     });
 
-    elem.addEventListener('mousemove', (event) => {
+    canvas.addEventListener('mousemove', (event) => {
       cursor_location = screen_to_game([event.x, event.y]);
     });
 
-    elem.addEventListener('mouseup', (event) => {
+    canvas.addEventListener('mouseup', (event) => {
       event.preventDefault();
       cursor_location = screen_to_game([event.x, event.y]);
       if (event.button === 0) {

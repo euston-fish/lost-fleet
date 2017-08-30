@@ -19,6 +19,7 @@ function Unit(arena, { id: id,
   this.stats = stats || [128, 128, 128];
   this.waypoints = waypoints || [];
   this.velocity = velocity || [0, 0];
+  this.rotation = scalar_angle(this.velocity);
 }
 
 Unit.prototype.destroy = function() {
@@ -27,12 +28,14 @@ Unit.prototype.destroy = function() {
 }
 
 Unit.prototype.serialize = function() {
-  return { id: this.id,
-           owner_id: this.owner.id,
-           position: this.position,
-           stats: this.stats,
-           waypoints: this.waypoints,
-           velocity: this.velocity };
+  return {
+    id: this.id,
+    owner_id: this.owner.id,
+    position: this.position,
+    stats: this.stats,
+    waypoints: this.waypoints,
+    velocity: this.velocity
+  };
 }
 
 Unit.prototype.receive = function(command, ...params) {
@@ -42,6 +45,7 @@ Unit.prototype.receive = function(command, ...params) {
 Unit.prototype.tick = function() {
   this.velocity = add(this.velocity, this.acceleration());
   this.position = add(this.position, this.velocity);
+  this.rotation = towards(this.rotation, scalar_angle(this.velocity), 1);
   this.attack_target();
 }
 
