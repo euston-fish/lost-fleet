@@ -9,5 +9,5 @@ let
     return [x/l, y/l];
   },
   leng = ([x, y]) => Math.sqrt(x*x+y*y),
-  clamp = (val) => Math.max(0, Math.min(255, val)),
+  clamp = (val) => Math.max(0, val),
   mix = (val, min, max) => min + (max - min) * val;

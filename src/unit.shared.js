@@ -69,6 +69,10 @@ Unit.prototype.weapon_damage = function() {
   return this.stats[2] / 11;
 }
 
+Unit.prototype.mine_efficiency = function() {
+  return 0.9 * this.weapon_damage();
+}
+
 /// Commands ///
 //
 // These are commands that the unit can receive
@@ -99,6 +103,7 @@ Unit.prototype.attack_target = function () {
   if (!other) {
     this.target_id = null;
   } else if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
+    this.owner.mine_resource(other.stats, this.mine_efficiency())
     other.decrease_stats(this.weapon_damage());
   } else {
     this.clear_waypoints();

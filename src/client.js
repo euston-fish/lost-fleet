@@ -3,6 +3,9 @@
   let selection_groups = {};
   let slider_vals, el;
   let arena;
+  let resource_display;
+
+  let moi = () => arena.users[me];
 
   {
     let old_destroy = Unit.prototype.destroy;
@@ -16,7 +19,6 @@
       }
     }
   }
-
 
   Unit.prototype.draw = function(ctx) {
     let other;
@@ -46,6 +48,7 @@
       ctx.arc(Math.round(x), Math.round(y), this.radius() + 5, 0, Math.PI * 2);
       ctx.stroke();
     }
+    resource_display.innerText = moi() && moi().resources.map(Math.floor);
   }
 
   let draw = () => {
@@ -83,6 +86,7 @@
     socket = io({ upgrade: false, transports: ["websocket"] });
     let command = (...args) => socket.emit('command', args)
     let elem = el('c');
+    resource_display = el('resources');
     ctx = elem.getContext('2d');
     socket.on('tick', handle_tick);
 
@@ -99,7 +103,12 @@
 
     el('create').onclick = () => {
       if (Object.values(selected)[0]) {
-        command(Object.values(selected)[0].id, 'create', [slider_vals.r, slider_vals.g, slider_vals.b]);
+        let cost = [slider_vals.r, slider_vals.g, slider_vals.b];
+        let subtracted = moi().subtracted_resources(...cost);
+        if (subtracted != '0,0,0') {
+          moi().resources = subtracted;
+          command(Object.values(selected)[0].id, 'create', );
+        }
       }
     };
 
