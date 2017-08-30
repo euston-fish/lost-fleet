@@ -66,7 +66,7 @@ Unit.prototype.weapon_range = function() {
 }
 
 Unit.prototype.weapon_damage = function() {
-  return 100;//this.stats[2] / 11;
+  return this.stats[2] / 11;
 }
 
 /// Commands ///
@@ -75,6 +75,7 @@ Unit.prototype.weapon_damage = function() {
 
 Unit.prototype.add_waypoint = function(waypoint) {
   // Add a new waypoint
+  this.target_id = null;
   this.waypoints.push(waypoint);
 }
 
@@ -102,6 +103,7 @@ Unit.prototype.attack_target = function () {
   } else {
     this.clear_waypoints();
     this.add_waypoint(other.position);
+    this.target_id = other.id;
   }
 }
 
