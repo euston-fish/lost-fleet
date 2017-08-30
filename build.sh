@@ -2,18 +2,40 @@
 
 set -e
 
-SOURCE='public/*.js'
+SOURCES='src/*'
 
-rm -rf target
-mkdir -p target/public
+UGLIFY_OPTS='-c -m'
 
-for file in $SOURCE
+rm -rf public
+mkdir -p public
+
+for file in $SOURCES
 do
-  uglifyjs -c -m --output target/${file%.js}.min.js -- $file
+  case $file in
+    *shared.js)
+      SHARED_SOURCES="$SHARED_SOURCES $file"
+    ;;
+    *client.js)
+      CLIENT_SOURCES="$CLIENT_SOURCES $file"
+    ;;
+    *server.js)
+      SERVER_SOURCES="$SERVER_SOURCES $file"
+    ;;
+    *.js)
+      uglifyjs $UGLIFY_OPTS --output public${file#src} -- $file
+    ;;
+    *)
+      cp $file public${file#src}
+    ;;
+  esac
 done
 
+uglifyjs $UGLIFY_OPTS --output public/shared.js -- $SHARED_SOURCES
+uglifyjs $UGLIFY_OPTS --output public/client.js -- $CLIENT_SOURCES
+uglifyjs $UGLIFY_OPTS --output public/server.js -- $SERVER_SOURCES
+
 rm -f final.zip
-zip -9 -r final.zip target
+zip -9 -r final.zip public
 
 if [ $(uname) = Darwin ]; then
   flag=-f%z
