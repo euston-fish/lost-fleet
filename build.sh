@@ -55,7 +55,7 @@ older_than public/shared.js $SHARED_SOURCES && uglifyjs $UGLIFY_OPTS --output pu
 older_than public/client.js $CLIENT_SOURCES && uglifyjs $UGLIFY_OPTS --output public/client.js -- $CLIENT_SOURCES
 older_than public/server.js $SERVER_SOURCES && uglifyjs $UGLIFY_OPTS --output public/server.js -- $SERVER_SOURCES
 
-if [ "$1" = skip ]
+if [ ! "$1" = skip ]
 then
   rm -f final.zip
   zip -9 -r final.zip public
