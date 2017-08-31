@@ -1,31 +1,36 @@
-(function() {
-  let socket, ctx, me, mothership, cursor_location, selected = {};
+window.addEventListener("load", function() {
+  let me, mothership, cursor_location, selected = {};
   let selection_groups = {};
-  let slider_vals, el;
+  let slider_vals;
   let arena;
   let view_center = [0, 0];
   let zoom = 1;
-  let resource_display;
   let moi = () => arena.users[me];
   let pressed_keys = {};
   let ui_state = { mode: 'NONE' };
-  let canvas;
+  let el = (id) => document.getElementById(id);
+  let resource_display = el('resources');;
+  let canvas = el('c');
+  let ctx = canvas.getContext('2d');
+  let socket = io({ upgrade: false, transports: ["websocket"] });
 
-  let game_to_screen = (game_pos) => {
+  let game_to_screen = (game_pos, view_center_) => {
+    let vc = view_center_ || view_center
     // screen_pos = center + (game_pos - view_center) * zoom
     let screen_dimensions = [ctx.canvas.width, ctx.canvas.height];
     let center = scale(screen_dimensions, 0.5);
-    let dist_from_center = add(game_pos, inv(view_center));
+    let dist_from_center = add(game_pos, inv(vc));
     let screen_coordinate = add(center, scale(dist_from_center, zoom));
     return screen_coordinate;
   };
 
 
-  let screen_to_game = (screen_pos) => {
+  let screen_to_game = (screen_pos, view_center_) => {
+    let vc = view_center_ || view_center
     // game_pos = ((screen_pos - center) / zoom) + view_center
     let screen_dimensions = [ctx.canvas.width, ctx.canvas.height];
     let center = scale(screen_dimensions, 0.5);
-    return add(scale(add(screen_pos, inv(center)), 1/zoom), view_center);
+    return add(scale(add(screen_pos, inv(center)), 1/zoom), vc);
   };
 
   {
@@ -48,7 +53,7 @@
     }
   }
 
-  stroke_triangle = ([x, y], size, rotation) => {
+  let stroke_triangle = ([x, y], size, rotation) => {
     ctx.beginPath();
     ctx.translate(x, y);
     ctx.rotate(rotation);
@@ -91,33 +96,59 @@
     resource_display.innerText = moi() && moi().resources.map(Math.floor);
   }
 
-  let draw_stars;
-  {
-    let master = new RNG(15784);
+  let draw_stars = (e, s, min, max) => {
+    let star_canvas = el(e);
+    let star_ctx = star_canvas.getContext('2d');
+
+    let master = new RNG(15784 + s + min + max);
     let x_coefficient = master.random_int();
     let y_coefficient = master.random_int();
     let constant = master.random_int();
     let block_size = 200;
 
-    draw_stars = () => {
-      for (let x = Math.floor((view_center[0] - canvas.width / 2) / block_size)*block_size; x < Math.ceil((view_center[0] + canvas.width/2) / block_size)*block_size; x += block_size) {
-        for (let y = Math.floor((view_center[1] - canvas.height / 2) / block_size)*block_size; y < Math.ceil((view_center[1] + canvas.height/2)/block_size)*block_size; y += block_size) {
-          let rng = new RNG(x_coefficient*x/block_size + y_coefficient*y/block_size + constant);
-          let num_stars = Math.round(mix(rng.random(), 3, 30));
-          for (let i = 0; i < num_stars; i++) {
-            ctx.beginPath();
-            ctx.arc(...game_to_screen([x + rng.random()*block_size, y + rng.random()*block_size]), 1+rng.random(), 0, Math.PI * 2);
-            ctx.fillStyle = 'white';
-            ctx.fill();
+    let resize = () => {
+      star_canvas.width = window.innerWidth;
+      star_canvas.height = window.innerHeight;
+    }
+
+    let previous_view_center = null;
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    return () => {
+      if(previous_view_center + '' !== view_center + '') {
+        star_ctx.clearRect(0, 0, star_canvas.width, star_canvas.height);
+        let star_center = scale(view_center, s);
+        for (let x = Math.floor((star_center[0] - canvas.width / 2) / block_size)*block_size; x < Math.ceil((star_center[0] + canvas.width/2) / block_size)*block_size; x += block_size) {
+          for (let y = Math.floor((star_center[1] - canvas.height / 2) / block_size)*block_size; y < Math.ceil((star_center[1] + canvas.height/2)/block_size)*block_size; y += block_size) {
+            let rng = new RNG(x_coefficient*x/block_size + y_coefficient*y/block_size + constant);
+            let num_stars = Math.round(mix(rng.random(), min, max));
+            for (let i = 0; i < num_stars; i++) {
+              let radius = 1+rng.random()*0.5;
+              let pos = game_to_screen([x + rng.random()*block_size, y + rng.random()*block_size], star_center);
+              star_ctx.beginPath();
+              star_ctx.arc(...pos, radius, 0, Math.PI * 2);
+              star_ctx.fillStyle = 'white';
+              star_ctx.fill();
+            }
           }
-          //ctx.beginPath();
-          //ctx.arc(...game_to_screen([x, y]), 5, 0, Math.PI * 2);
-          //ctx.strokeStyle = 'orange';
-          //ctx.stroke();
         }
       }
+      previous_view_center = view_center;
     }
   }
+
+  let draw_near_stars = draw_stars('near_stars', 0.15, 2, 5);
+  let draw_min_stars = draw_stars('mid_stars', 0.10, 3, 7);
+  let draw_far_stars = draw_stars('far_stars', 0.05, 2, 5);
+
+  let resize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  };
+  window.addEventListener("resize", resize);
+  resize();
 
   let previous_time = null;
   let draw = (time) => {
@@ -139,10 +170,10 @@
       view_center = add(view_center, scale(norm(scroll_dir), dt));
     }
     previous_time = time;
-    ctx.canvas.width = window.innerWidth;
-    ctx.canvas.height = window.innerHeight;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    draw_stars();
+    draw_near_stars();
+    draw_min_stars();
+    draw_far_stars();
     ctx.strokeStyle = 'white';
     if(ui_state.mode === 'SELECT') {
       ctx.strokeRect(...ui_state.origin, ...add(cursor_location, inv(ui_state.origin)));
@@ -162,12 +193,7 @@
   }
 
   init = () => {
-    el = (id) => document.getElementById(id);
-    socket = io({ upgrade: false, transports: ["websocket"] });
     let command = (...args) => socket.emit('command', args)
-    canvas = el('c');
-    resource_display = el('resources');
-    ctx = canvas.getContext('2d');
     socket.on('tick', handle_tick);
 
     slider_vals = {};
@@ -298,5 +324,5 @@
     window.requestAnimationFrame(draw);
   }
 
-  window.addEventListener("load", init, false);
-})();
+  init();
+}, false);
