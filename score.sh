@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -e
+
 ./build.sh -m -f
 
 rm -f final.zip
