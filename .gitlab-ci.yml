@@ -5,7 +5,7 @@ build:
     - apt-get update
     - apt-get -y install zip
     - npm install
-    - ./build.sh
+    - npm score
   artifacts:
     paths:
       - final.zip

@@ -1,79 +1,83 @@
 #!/bin/bash
 
 set -e
+shopt -s extglob
+
+UGLIFY=`npm bin`/uglifyjs
+SRC="src"
+TARGET="public"
+force=false
+uglify_opts='-b'
+
+while [ $# -gt 0 ]; do
+  arg="$1"
+  shift
+
+  case $arg in
+    -m|--minify)
+      uglify_opts='-c -m'
+    ;;
+    -d|--debug)
+      uglify_opts='-b'
+    ;;
+    -f|--force)
+      force=true
+    ;;
+    *)
+    ;;
+  esac
+done
+
+BLUE='\033[00;34m'
+NONE='\033[0m'
+debug() {
+  >&2 echo -e "${BLUE}build.sh: $@${NONE}"
+}
 
 older_than() {
   local target="$1"
   shift
-  if [ ! -e "$target" ] # target hasn't been created
-  then
+  if [ ! -e "$target" ]; then # target hasn't been created
+    debug "$target doesn't exist"
     return 0
   fi
   local f
-  for f in "$@"
-  do
-    if [ "$f" -nt "$target" ] # dependency is newer than target
-    then
+  for f in "$@"; do
+    if [ "$f" -nt "$target" ]; then # dependency is newer than target
+      debug "$target is outdated"
       return 0
     fi
   done
   return 1  # target exists and is newer than dependencies
 }
 
-SOURCES='src/*'
+debug "starting"
 
-UGLIFY_OPTS='-c -m'
-UGLIFY=`npm bin`/uglifyjs
+mkdir -p $TARGET
+rm -f $TARGET/!(*client.js|*server.js|*shared.js|index.html)
 
-#rm -rf public
-# TODO: we never remove files from public now...
-mkdir -p public
-
-for file in $SOURCES
-do
-  case $file in
-    *shared.js)
-      SHARED_SOURCES="$SHARED_SOURCES $file"
-    ;;
-    *client.js)
-      CLIENT_SOURCES="$CLIENT_SOURCES $file"
-    ;;
-    *server.js)
-      SERVER_SOURCES="$SERVER_SOURCES $file"
-    ;;
+for group in shared.js client.js server.js index.html; do
+  case $group in
     *.js)
-      older_than public${file#src} $file && $UGLIFY $UGLIFY_OPTS --output public${file#src} -- $file
+      sources="$SRC/*$group"
+      target="$TARGET/$group"
+      if older_than $target $sources || $force; then
+        debug "rebuilding $group"
+        $UGLIFY $uglify_opts -- $sources > $target
+      fi
     ;;
-    *.swp)
+    *.html)
+      sources="$SRC/$group"
+      target="$TARGET/$group"
+      if older_than $target -- $sources || $force; then
+        debug "rebuilding $group"
+        cat $sources > $target
+      fi
     ;;
     *)
-      cp $file public${file#src}
+      debug "Don't know what to do for $group, skipping..."
     ;;
   esac
 done
 
-older_than public/shared.js $SHARED_SOURCES && $UGLIFY $UGLIFY_OPTS --output public/shared.js -- $SHARED_SOURCES
-older_than public/client.js $CLIENT_SOURCES && $UGLIFY $UGLIFY_OPTS --output public/client.js -- $CLIENT_SOURCES
-older_than public/server.js $SERVER_SOURCES && $UGLIFY $UGLIFY_OPTS --output public/server.js -- $SERVER_SOURCES
-
-if [ ! "$1" = skip ]
-then
-  rm -f final.zip
-  zip -9 -r final.zip public
-
-  if [ $(uname) = Darwin ]; then
-    flag=-f%z
-  else
-    flag=-c%s
-  fi
-  size="$(stat $flag final.zip)"
-  (( percent = size * 100 / 13312 ))
-
-  echo "Size is $size"
-  if [ $size -gt 13312 ]; then
-    echo "Too big!"
-    exit 1
-  else
-    echo "Percentage: $percent"
-  fi
-fi
+debug "complete"

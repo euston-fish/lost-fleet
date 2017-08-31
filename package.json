@@ -6,7 +6,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "postinstall": "./build.sh skip"
+    "build": "./build.sh",
+    "score": "./score.sh",
+    "run": "./run.sh",
+    "postinstall": "./build.sh -m"
   },
   "keywords": [
     "js13kgames",
