@@ -6,6 +6,7 @@ set -e
 
 rm -f final.zip
 zip -q -9 -r final.zip public
+#7z a -r final.zip public # enabling 7zip might get us a few extra bytes, if we can make sure it's acceptable
 
 if [ $(uname) = Darwin ]; then
   flag=-f%z

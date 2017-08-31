@@ -4,7 +4,6 @@ window.addEventListener("load", function() {
   let slider_vals;
   let arena;
   let view_center = [0, 0];
-  let zoom = 1;
   let moi = () => arena.users[me];
   let pressed_keys = {};
   let ui_state = { mode: 'NONE' };
@@ -13,24 +12,24 @@ window.addEventListener("load", function() {
   let canvas = el('c');
   let ctx = canvas.getContext('2d');
   let socket = io({ upgrade: false, transports: ["websocket"] });
+  let add_event_listener = (object, ...args) => object.addEventListener(...args);
+  let w = window;
 
   let game_to_screen = (game_pos, view_center_) => {
     let vc = view_center_ || view_center
-    // screen_pos = center + (game_pos - view_center) * zoom
     let screen_dimensions = [ctx.canvas.width, ctx.canvas.height];
     let center = scale(screen_dimensions, 0.5);
-    let dist_from_center = add(game_pos, inv(vc));
-    let screen_coordinate = add(center, scale(dist_from_center, zoom));
+    let dist_from_center = sub(game_pos, vc);
+    let screen_coordinate = add(center, dist_from_center);
     return screen_coordinate;
   };
 
 
   let screen_to_game = (screen_pos, view_center_) => {
     let vc = view_center_ || view_center
-    // game_pos = ((screen_pos - center) / zoom) + view_center
     let screen_dimensions = [ctx.canvas.width, ctx.canvas.height];
     let center = scale(screen_dimensions, 0.5);
-    return add(scale(add(screen_pos, inv(center)), 1/zoom), vc);
+    return add(sub(screen_pos, center), vc);
   };
 
   {
@@ -38,58 +37,54 @@ window.addEventListener("load", function() {
     Unit.prototype.destroy = function(user_was_removed) {
       old_destroy.call(this);
       if (this.owner.id === me) {
-        for (let group of Object.values(selection_groups)) {
+        for (let group of selection_groups.values()) {
           delete group[this.id];
         }
         delete selected[this.id];
       }
-      if (!user_was_removed && Object.values(arena.users).length != 1) {
-        if (Object.values(moi().units).length === 0) {
-          el('c').style.backgroundColor = '#781A05';
-        } else if (Object.values(arena.units).filter((unit) => unit.owner.id != me).length === 0) {
-          el('c').style.backgroundColor = '#078219';
+      if (!user_was_removed && arena.users.values().length != 1) {
+        if (moi().units.values().length === 0) {
+          el('b').style.backgroundColor = '#781A05';
+        } else if (arena.units.values().filter((unit) => unit.owner.id != me).length === 0) {
+          el('b').style.backgroundColor = '#078219';
         }
       }
     }
   }
 
+  CanvasRenderingContext2D.prototype.circle = function(pos, radius) {
+    this.arc(...pos, radius, 0, Math.PI * 2);
+  }
+
   let stroke_triangle = ([x, y], size, rotation) => {
     ctx.beginPath();
+    ctx.save();
     ctx.translate(x, y);
     ctx.rotate(rotation);
     ctx.moveTo(0, -size);
     ctx.lineTo(size, size);
     ctx.lineTo(-size, size);
-    ctx.rotate(-rotation);
-    ctx.translate(-x, -y);
+    ctx.restore();
     ctx.closePath();
   }
 
   Unit.prototype.draw = function() {
-    let [x, y] = game_to_screen(this.position);
+    let pos = game_to_screen(this.position);
     let other;
     if (other = arena.units[this.target_id]) {
-      if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
+      if (leng(sub(this.position, other.position)) < this.weapon_range()) {
         ctx.strokeStyle = this.owner.color;
         ctx.beginPath();
         ctx.lineWidth = 4;
-        ctx.moveTo(...[x, y]);
+        ctx.moveTo(...pos);
         ctx.lineTo(...game_to_screen(other.position));
         ctx.stroke();
       }
     }
-    stroke_triangle([x, y], this.radius(), this.rotation);
+    stroke_triangle(pos, this.radius(), this.rotation);
     ctx.fillStyle = this.owner.color;
     ctx.fill();
-    // ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
-    // ctx.fillStyle = this.color();
-    // ctx.fill();
-    // ctx.beginPath();
-    // ctx.strokeStyle = this.owner.color;
-    // ctx.lineWidth = 3;
-    // ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
-    // ctx.stroke();
-    stroke_triangle([x, y], this.radius(), this.rotation);
+    stroke_triangle(pos, this.radius(), this.rotation);
     ctx.strokeStyle = selected[this.id] ? 'orange' : 'grey';
     ctx.lineWidth = 3;
     ctx.stroke();
@@ -104,31 +99,36 @@ window.addEventListener("load", function() {
     let x_coefficient = master.random_int();
     let y_coefficient = master.random_int();
     let constant = master.random_int();
-    let block_size = 200;
+    const block_size = 200;
+
+    let previous_view_center = null;
 
     let resize = () => {
       star_canvas.width = window.innerWidth;
       star_canvas.height = window.innerHeight;
+      previous_view_center = null;
     }
-
-    let previous_view_center = null;
-
-    window.addEventListener('resize', resize);
+    add_event_listener(w, 'resize', resize);
     resize();
+
+    let round_to = (type, block) => ((x) => type(x / block) * block);
+    let round_to_floor = round_to(Math.floor, block_size);
+    let round_to_ceil = round_to(Math.ceil, block_size);
 
     return () => {
       if(previous_view_center + '' !== view_center + '') {
         star_ctx.clearRect(0, 0, star_canvas.width, star_canvas.height);
         let star_center = scale(view_center, s);
-        for (let x = Math.floor((star_center[0] - canvas.width / 2) / block_size)*block_size; x < Math.ceil((star_center[0] + canvas.width/2) / block_size)*block_size; x += block_size) {
-          for (let y = Math.floor((star_center[1] - canvas.height / 2) / block_size)*block_size; y < Math.ceil((star_center[1] + canvas.height/2)/block_size)*block_size; y += block_size) {
+        for (let x = round_to_floor(star_center[0] - star_canvas.width / 2); x < round_to_ceil(star_center[0] + star_canvas.width / 2); x += block_size) {
+          for (let y = round_to_floor(star_center[1] - star_canvas.height / 2); y < round_to_ceil(star_center[1] + star_canvas.height / 2); y += block_size) {
+
             let rng = new RNG(x_coefficient*x/block_size + y_coefficient*y/block_size + constant);
             let num_stars = Math.round(mix(rng.random(), min, max));
-            for (let i = 0; i < num_stars; i++) {
+            while(num_stars--) {
               let radius = 1+rng.random()*0.5;
               let pos = game_to_screen([x + rng.random()*block_size, y + rng.random()*block_size], star_center);
               star_ctx.beginPath();
-              star_ctx.arc(...pos, radius, 0, Math.PI * 2);
+              star_ctx.circle(pos, radius);
               star_ctx.fillStyle = 'white';
               star_ctx.fill();
             }
@@ -147,7 +147,7 @@ window.addEventListener("load", function() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   };
-  window.addEventListener("resize", resize);
+  add_event_listener(w, "resize", resize);
   resize();
 
   let previous_time = null;
@@ -155,18 +155,10 @@ window.addEventListener("load", function() {
     if(previous_time) {
       dt = time - previous_time;
       let scroll_dir = [0, 0];
-      if (pressed_keys["ArrowLeft"]) {
-        scroll_dir = add(scroll_dir, [-1, 0]);
-      }
-      if (pressed_keys["ArrowRight"]) {
-        scroll_dir = add(scroll_dir, [1, 0]);
-      }
-      if (pressed_keys["ArrowUp"]) {
-        scroll_dir = add(scroll_dir, [0, -1]);
-      }
-      if (pressed_keys["ArrowDown"]) {
-        scroll_dir = add(scroll_dir, [0, 1]);
-      }
+      const arrows = [['Left', [-1, 0]], ['Right', [1, 0]], ['Up', [0, -1]], ['Down', [0, 1]]];
+      arrows.forEach(([name, dir]) => {
+        if (pressed_keys["Arrow"+name]) scroll_dir = add(scroll_dir, dir);
+      });
       view_center = add(view_center, scale(norm(scroll_dir), dt));
     }
     previous_time = time;
@@ -176,10 +168,10 @@ window.addEventListener("load", function() {
     draw_far_stars();
     ctx.strokeStyle = 'white';
     if(ui_state.mode === 'SELECT') {
-      ctx.strokeRect(...ui_state.origin, ...add(cursor_location, inv(ui_state.origin)));
+      ctx.strokeRect(...ui_state.origin, ...sub(cursor_location, ui_state.origin));
     }
     if (arena) {
-      Object.values(arena.units).forEach((unit) => unit.draw());
+      arena.units.values().forEach((unit) => unit.draw());
     }
     window.requestAnimationFrame(draw);
   }
@@ -192,82 +184,68 @@ window.addEventListener("load", function() {
     arena.tick();
   }
 
-  init = () => {
-    let command = (...args) => socket.emit('command', args)
-    socket.on('tick', handle_tick);
+  let command = (...args) => socket.emit('command', args)
+  socket.on('tick', handle_tick);
 
-    slider_vals = {};
-    ['r', 'g', 'b'].forEach((range) => {
-      let disp = el(range + '-val');
-      let slider = el(range);
-      slider.onchange = () => {
-        disp.innerText = slider.value;
-        slider_vals[range] = +slider.value;
+  slider_vals = {};
+  ['r', 'g', 'b'].forEach((range) => {
+    let disp = el(range + '-val');
+    let slider = el(range);
+    slider.onchange = () => {
+      disp.innerText = slider.value;
+      slider_vals[range] = +slider.value;
+    }
+    slider_vals[range] = 0;
+  });
+
+  el('create').onclick = () => {
+    if (selected.values()[0]) {
+      let cost = [slider_vals.r, slider_vals.g, slider_vals.b];
+      let subtracted = moi().subtracted_resources(...cost);
+      if (subtracted != '0,0,0') {
+        moi().resources = subtracted;
+        command(selected.values()[0].id, 'create', cost);
       }
-      slider_vals[range] = 0;
-    });
+    }
+  };
 
-    el('create').onclick = () => {
-      if (Object.values(selected)[0]) {
-        let cost = [slider_vals.r, slider_vals.g, slider_vals.b];
-        let subtracted = moi().subtracted_resources(...cost);
-        if (subtracted != '0,0,0') {
-          moi().resources = subtracted;
-          command(Object.values(selected)[0].id, 'create', cost);
-        }
-      }
-    };
+  add_event_listener(w, 'contextmenu', (event) => event.preventDefault());
+  add_event_listener(canvas, 'mousedown', (event) => cursor_location = [event.x, event.y]);
+  add_event_listener(canvas, 'mousemove', (event) => cursor_location = [event.x, event.y]);
+  add_event_listener(canvas, 'mouseup', (event) => cursor_location = [event.x, event.y]);
 
-    canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+  add_event_listener(canvas, 'mousedown', (event) => {
+    if ((event.button === 0 && pressed_keys['p']) || event.button === 1) {
+      ui_state = { mode: 'PAN', origin: cursor_location, original_view_center: view_center };
+    } else if (event.button === 0) {
+      ui_state = { mode: 'SELECT', origin: cursor_location, additive: pressed_keys['shift'] };
+    }
+  });
 
-    canvas.addEventListener('mousedown', (event) => {
-      cursor_location = [event.x, event.y];
-    });
-    canvas.addEventListener('mousemove', (event) => cursor_location = [event.x, event.y]);
-    canvas.addEventListener('mouseup', (event) => {
-      cursor_location = [event.x, event.y]
-    });
+  add_event_listener(canvas, 'mousemove', (event) => {
+    if (ui_state.mode === 'PAN') {
+      view_center = add(ui_state.original_view_center, sub(ui_state.origin, cursor_location));
+    }
+  });
 
-    canvas.addEventListener('mousemove', (event) => {
-      if (ui_state.mode === 'PAN') {
-        view_center = add(ui_state.original_view_center, sub(ui_state.origin, cursor_location));
-      }
-    });
-
-    canvas.addEventListener('mousedown', (event) => {
-      console.log('mousedown');
-      if(event.button === 0) {
-        if(pressed_keys['p']) {
-          ui_state = { mode: 'PAN', origin: cursor_location, original_view_center: view_center };
-        } else {
-          ui_state = { mode: 'SELECT', origin: cursor_location };
-        }
-      }
-      console.log(ui_state);
-    });
-
-    canvas.addEventListener('mousemove', (event) => {
-    });
-
-    canvas.addEventListener('mouseup', (event) => {
-      console.log('mouseup');
-      console.log(ui_state);
-      if (ui_state.mode === 'SELECT') {
-        selected = {};
-        let item;
-        if (moi()) {
-          for (let unit of Object.values(arena.users[me].units)) {
-            if (in_rounded_rectangle(unit.position, unit.radius() / zoom, screen_to_game(cursor_location), screen_to_game(ui_state.origin))) {
-              selected[unit.id] = unit;
-            }
-          }
-        }
-      } else if (event.button === 2) {
-        let offset = [0, 0]
-        let target = Object.values(arena.units).find((unit) =>
-          in_rounded_rectangle(unit.position, unit.radius() / zoom, screen_to_game(cursor_location), screen_to_game(cursor_location)) && unit.owner.id !== me);
-
-        for (var unit of Object.values(selected)) {
+  add_event_listener(canvas, 'mouseup', (event) => {
+    if (ui_state.mode === 'SELECT') {
+      if (!ui_state.additive) selected = {};
+      // Take all of our units
+      (moi() ? moi().units.values() : [])
+        // Filter to just the ones in the rounded rectangle specified by the cursor location and selection origin
+        .filter((unit) => in_rounded_rectangle(unit.position, unit.radius(), screen_to_game(cursor_location), screen_to_game(ui_state.origin)))
+        // Put each of these units into the selected set
+        .forEach((unit) => selected[unit.id] = unit);
+    } else if (event.button === 2) {
+      let offset = [0, 0];
+      let target = arena.units.values()
+        .find((unit) =>
+          unit.owner.id !== me &&
+          in_rounded_rectangle(unit.position, unit.radius(), screen_to_game(cursor_location))
+        );
+      selected.values()
+        .forEach((unit) => {
           if (target) {
             command(unit.id, 'set_target', target.id);
           } else {
@@ -277,52 +255,46 @@ window.addEventListener("load", function() {
             command(unit.id, 'add_waypoint', add(screen_to_game(cursor_location), offset));
             offset = add(offset, [36, 0]);
           }
-        }
-      }
-    });
+        });
+    }
+  });
 
-    canvas.addEventListener('mouseup', (event) => ui_state = { mode: 'NONE' });
+  add_event_listener(canvas, 'mouseup', (event) => ui_state = { mode: 'NONE' });
 
-    document.addEventListener('keydown', (event) => {
-      pressed_keys[event.key] = event;
-      if(/^\d$/.test(event.key)) {
-        if (event.ctrlKey) {
-          selection_groups[event.key] = selected;
-        } else {
-          // TODO: if units get deleted, this might break
-          selected = selection_groups[event.key] || {};
-        }
-      } else if (event.key == 'a') {
-        selected = arena.users[me].units;
-      } else if (event.key == 'Delete' || event.key == 'Backspace') {
-        Object.values(selected).forEach((unit) => command(unit.id, 'destroy'))
-      }
-    });
-
-    document.addEventListener('keyup', (event) => {
-      delete pressed_keys[event.key];
-    });
-
-    document.addEventListener('wheel', (event) => {
-      // TODO: make this zoom maybe a little more nicely?
-      if(event.deltaY > 0) {
-        zoom *= event.deltaY / 5;
+  add_event_listener(w, 'keydown', (event) => {
+    pressed_keys[event.key] = event;
+    if (event.shiftKey) pressed_keys['shift'] = event;
+    if (event.ctrlKey) pressed_keys['ctrl'] = event;
+    if (event.altKey) pressed_keys['alt'] = event;
+    if(/^\d$/.test(event.key)) {
+      if (event.ctrlKey) {
+        selection_groups[event.key] = Object.assign({}, selected);
       } else {
-        zoom /= -event.deltaY / 5;
+        selected = Object.assign({}, selection_groups[event.key] || {});
       }
-    });
+    } else if (event.key == 'a') {
+      selected = Object.assign({}, arena.users[me].units);
+    } else if (event.key == 'Delete' || event.key == 'Backspace') {
+      selected.values().forEach((unit) => command(unit.id, 'destroy'))
+    }
+  });
 
-    socket.on('connected', (arena_, me_) => {
-      arena = new Arena(arena_);
-      me = me_;
-      console.log('connected', arena, me);
-    });
+  add_event_listener(w, 'keyup', (event) => {
+    delete pressed_keys[event.key];
+    if (!event.shiftKey) delete pressed_keys['shift'];
+    if (!event.ctrlKey) delete pressed_keys['ctrl'];
+    if (!event.altKey) delete pressed_keys['alt'];
+  });
 
-    socket.on("error", () => {
-      console.log("error")
-    });
-    window.requestAnimationFrame(draw);
-  }
+  socket.on('connected', (arena_, me_) => {
+    arena = new Arena(arena_);
+    me = me_;
+    console.log('connected', arena, me);
+  });
 
-  init();
+  socket.on("error", () => {
+    console.log("error")
+  });
+  window.requestAnimationFrame(draw);
+
 }, false);

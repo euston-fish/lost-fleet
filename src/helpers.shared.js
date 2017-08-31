@@ -23,22 +23,29 @@ let
   scalar_angle = ([dx, dy]) => Math.atan2(dy, dx) + (Math.PI * 0.5);
 
 function in_rounded_rectangle(point, radius, corner_a, corner_b) {
+  if(!corner_b) corner_b = corner_a;
+  let t = min(corner_a[1], corner_b[1]),
+      b = max(corner_a[1], corner_b[1]),
+      l = min(corner_a[0], corner_b[0]),
+      r = max(corner_a[0], corner_b[0]),
+      x = point[0],
+      y = point[1];
   let tl_ = tl(corner_a, corner_b);
   let br_ = br(corner_a, corner_b);
   let tr_ = tr(corner_a, corner_b);
   let bl_ = bl(corner_a, corner_b);
-  if(tl_[0] < point[0] && point[0] < br_[0]) {
-    if(tl_[1] - radius < point[1] && point[1] < br_[1] + radius) return true;
+  if(l < x && x < r) {
+    if(t - radius < y && y < b + radius) return true;
     else return false;
   }
-  if(tl_[1] < point[1] && point[1] < br_[1]) {
-    if(tl_[0] - radius < point[0] && point[0] < br_[0] + radius) return true;
+  if(t < y && y < b) {
+    if(l - radius < x && x < r + radius) return true;
     else return false;
   }
-  if(Math.min(leng(sub(point, tl_)),
-              leng(sub(point, tr_)),
-              leng(sub(point, bl_)),
-              leng(sub(point, br_))) < radius) return true;
+  if(Math.min(leng(sub(point, [l, t])),
+              leng(sub(point, [r, t])),
+              leng(sub(point, [l, b])),
+              leng(sub(point, [r, b]))) < radius) return true;
   return false;
 }
 
@@ -55,4 +62,8 @@ RNG.prototype.random = function() {
 
 RNG.prototype.random_int = function() {
   return this.seed = this.seed * 16087 % 2147483647;
+}
+
+Object.prototype.values = function() {
+  return Object.values(this);
 }

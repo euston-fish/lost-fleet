@@ -25,7 +25,7 @@ module.exports = function(socket) {
         arena.receive(command);
       }
       arena.tick();
-      for(socket of Object.values(sockets)) {
+      for(socket of sockets.values()) {
         socket.emit('tick', tick_commands);
       }
     }, 100);
