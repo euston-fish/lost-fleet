@@ -33,6 +33,16 @@ window.addEventListener("load", function() {
   };
 
   {
+    let old_introduce_user = Arena.handlers.introduce_user;
+    Arena.handlers.introduce_user = function(user) {
+      old_introduce_user.call(this, user);
+      if(user.id === me) {
+        view_center = moi().centroid();
+      }
+    }
+  }
+
+  {
     let old_destroy = Unit.prototype.destroy;
     Unit.prototype.destroy = function(user_was_removed) {
       old_destroy.call(this);
@@ -172,6 +182,24 @@ window.addEventListener("load", function() {
     }
     if (arena) {
       arena.units.values().forEach((unit) => unit.draw());
+      arena.users.values().forEach((user) => {
+        let d = sub(user.centroid(), view_center);
+        if(Math.abs(d[0]) > canvas.width/2 || Math.abs(d[1]) > canvas.height/2) {
+          ctx.beginPath();
+          ctx.moveTo(...add(scale(d, (canvas.height/2)/Math.abs(d[1])), [canvas.width/2-25, canvas.height/2]));
+          ctx.lineTo(...add(scale(d, (canvas.height/2)/Math.abs(d[1])), [canvas.width/2+25, canvas.height/2]));
+          ctx.strokeStyle = user.color;
+          ctx.lineWidth = 10;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(...add(scale(d, (canvas.width/2)/Math.abs(d[0])), [canvas.width/2, canvas.height/2-25]));
+          ctx.lineTo(...add(scale(d, (canvas.width/2)/Math.abs(d[0])), [canvas.width/2, canvas.height/2+25]));
+          ctx.strokeStyle = user.color;
+          ctx.lineWidth = 10;
+          ctx.stroke();
+          ctx.beginPath();
+        }
+      });
     }
     window.requestAnimationFrame(draw);
   }

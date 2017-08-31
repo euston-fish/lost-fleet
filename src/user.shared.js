@@ -26,3 +26,11 @@ User.prototype.subtracted_resources = function(r, g, b) {
     clamp(this.resources[2] - b)
   ];
 }
+
+User.prototype.centroid = function() {
+  let sum = [0, 0];
+  this.units.values().forEach((unit) => {
+    sum = add(sum, unit.position);
+  });
+  return scale(sum, 1/this.units.values().length);
+}

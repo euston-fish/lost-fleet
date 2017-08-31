@@ -14,11 +14,7 @@ let
   },
   clamp = (val) => Math.max(0, val),
   mix = (val, min, max) => min + (max - min) * val,
-  combine = (fx, fy) => ((a, b) => [fx(a[0], b[0]), fy(a[1], b[1])]),
-  tl = combine(min, min),
-  tr = combine(max, min),
-  bl = combine(min, max),
-  br = combine(max, max),
+  normal = (uniform_1, uniform_2) => Math.sqrt(-2 * Math.log(uniform_1)) * Math.cos(2 * Math.PI * uniform_2);
   towards = (from, to, inc) => from < to ? min(from + inc, to) : max(to, from - inc),
   scalar_angle = ([dx, dy]) => Math.atan2(dy, dx) + (Math.PI * 0.5);
 
@@ -30,10 +26,6 @@ function in_rounded_rectangle(point, radius, corner_a, corner_b) {
       r = max(corner_a[0], corner_b[0]),
       x = point[0],
       y = point[1];
-  let tl_ = tl(corner_a, corner_b);
-  let br_ = br(corner_a, corner_b);
-  let tr_ = tr(corner_a, corner_b);
-  let bl_ = bl(corner_a, corner_b);
   if(l < x && x < r) {
     if(t - radius < y && y < b + radius) return true;
     else return false;
