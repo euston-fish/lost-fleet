@@ -61,7 +61,7 @@ for group in shared.js client.js server.js index.html; do
     *.js)
       sources="$SRC/*$group"
       target="$TARGET/$group"
-      if older_than $target $sources || $force; then
+      if $force || older_than $target $sources; then
         debug "rebuilding $group"
         $UGLIFY $uglify_opts -- $sources > $target
       fi
@@ -69,7 +69,7 @@ for group in shared.js client.js server.js index.html; do
     *.html)
       sources="$SRC/$group"
       target="$TARGET/$group"
-      if older_than $target -- $sources || $force; then
+      if $force || older_than $target -- $sources; then
         debug "rebuilding $group"
         cat $sources > $target
       fi
