@@ -4,7 +4,7 @@ build:
   script:
     - apt-get update
     - apt-get -y install zip
-    - npm install -g uglify-es 
+    - npm install
     - ./build.sh
   artifacts:
     paths:
