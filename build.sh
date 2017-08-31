@@ -23,6 +23,7 @@ older_than() {
 SOURCES='src/*'
 
 UGLIFY_OPTS='-c -m'
+UGLIFY=`npm bin`/uglifyjs
 
 #rm -rf public
 # TODO: we never remove files from public now...
@@ -41,7 +42,7 @@ do
       SERVER_SOURCES="$SERVER_SOURCES $file"
     ;;
     *.js)
-      older_than public${file#src} $file && uglifyjs $UGLIFY_OPTS --output public${file#src} -- $file
+      older_than public${file#src} $file && $UGLIFY $UGLIFY_OPTS --output public${file#src} -- $file
     ;;
     *.swp)
     ;;
@@ -51,9 +52,9 @@ do
   esac
 done
 
-older_than public/shared.js $SHARED_SOURCES && uglifyjs $UGLIFY_OPTS --output public/shared.js -- $SHARED_SOURCES
-older_than public/client.js $CLIENT_SOURCES && uglifyjs $UGLIFY_OPTS --output public/client.js -- $CLIENT_SOURCES
-older_than public/server.js $SERVER_SOURCES && uglifyjs $UGLIFY_OPTS --output public/server.js -- $SERVER_SOURCES
+older_than public/shared.js $SHARED_SOURCES && $UGLIFY $UGLIFY_OPTS --output public/shared.js -- $SHARED_SOURCES
+older_than public/client.js $CLIENT_SOURCES && $UGLIFY $UGLIFY_OPTS --output public/client.js -- $CLIENT_SOURCES
+older_than public/server.js $SERVER_SOURCES && $UGLIFY $UGLIFY_OPTS --output public/server.js -- $SERVER_SOURCES
 
 if [ ! "$1" = skip ]
 then
