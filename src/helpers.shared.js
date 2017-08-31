@@ -44,10 +44,15 @@ function in_rounded_rectangle(point, radius, corner_a, corner_b) {
 
 // RNG inspired by https://gist.github.com/blixt/f17b47c62508be59987b
 function RNG(seed) {
+  if(seed < 0) seed *= -1;
+  if(seed === 0) seed = 42;
   this.seed = seed % 2147483647;
-  if(this.seed <= 0) seed += 2147483647;
 }
 
 RNG.prototype.random = function() {
   return ((this.seed = this.seed * 16087 % 2147483647) - 1)/ 2147483647;
+}
+
+RNG.prototype.random_int = function() {
+  return this.seed = this.seed * 16087 % 2147483647;
 }

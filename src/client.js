@@ -94,17 +94,58 @@
     resource_display.innerText = moi() && moi().resources.map(Math.floor);
   }
 
-  let draw = () => {
+  let draw_stars;
+  {
+    let master = new RNG(15784);
+    let x_coefficient = master.random_int();
+    let y_coefficient = master.random_int();
+    let constant = master.random_int();
+    let block_size = 200;
+
+    draw_stars = () => {
+      for (let x = Math.floor((view_center[0] - canvas.width / 2) / block_size)*block_size; x < Math.ceil((view_center[0] + canvas.width/2) / block_size)*block_size; x += block_size) {
+        for (let y = Math.floor((view_center[1] - canvas.height / 2) / block_size)*block_size; y < Math.ceil((view_center[1] + canvas.height/2)/block_size)*block_size; y += block_size) {
+          let rng = new RNG(x_coefficient*x/block_size + y_coefficient*y/block_size + constant);
+          let num_stars = Math.round(mix(rng.random(), 3, 30));
+          for (let i = 0; i < num_stars; i++) {
+            ctx.beginPath();
+            ctx.arc(...game_to_screen([x + rng.random()*block_size, y + rng.random()*block_size]), 1+rng.random(), 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+          }
+          //ctx.beginPath();
+          //ctx.arc(...game_to_screen([x, y]), 5, 0, Math.PI * 2);
+          //ctx.strokeStyle = 'orange';
+          //ctx.stroke();
+        }
+      }
+    }
+  }
+
+  let previous_time = null;
+  let draw = (time) => {
+    if(previous_time) {
+      dt = time - previous_time;
+      let scroll_dir = [0, 0];
+      if (pressed_keys["ArrowLeft"]) {
+        scroll_dir = add(scroll_dir, [-1, 0]);
+      }
+      if (pressed_keys["ArrowRight"]) {
+        scroll_dir = add(scroll_dir, [1, 0]);
+      }
+      if (pressed_keys["ArrowUp"]) {
+        scroll_dir = add(scroll_dir, [0, -1]);
+      }
+      if (pressed_keys["ArrowDown"]) {
+        scroll_dir = add(scroll_dir, [0, 1]);
+      }
+      view_center = add(view_center, scale(norm(scroll_dir), dt));
+    }
+    previous_time = time;
     ctx.canvas.width = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    let rng = new RNG(42);
-    for (let i=0; i<300; i++) {
-      ctx.beginPath();
-      ctx.arc(rng.random()*ctx.canvas.width, rng.random()*ctx.canvas.height, 1+rng.random(), 0, Math.PI * 2);
-      ctx.fillStyle = 'white';
-      ctx.fill();
-    }
+    draw_stars();
     ctx.strokeStyle = 'white';
     if(ui_state.mode === 'SELECT') {
       ctx.strokeRect(...ui_state.origin, ...add(cursor_location, inv(ui_state.origin)));
