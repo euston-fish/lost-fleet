@@ -14,7 +14,7 @@ let
   },
   clamp = (val) => Math.max(0, val),
   mix = (val, min, max) => min + (max - min) * val,
-  normal = (uniform_1, uniform_2) => Math.sqrt(-2 * Math.log(uniform_1)) * Math.cos(2 * Math.PI * uniform_2);
+  normal = (uniform_1, uniform_2) => Math.sqrt(-2 * Math.log(uniform_1)) * Math.cos(2 * Math.PI * uniform_2),
   towards = (from, to, inc) => from < to ? min(from + inc, to) : max(to, from - inc),
   scalar_angle = ([dx, dy]) => Math.atan2(dy, dx) + (Math.PI * 0.5);
 
