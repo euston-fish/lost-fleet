@@ -48,16 +48,16 @@
     }
   }
 
-  draw_triangle = ([x, y], size, rotation) => {
+  stroke_triangle = ([x, y], size, rotation) => {
     ctx.beginPath();
     ctx.translate(x, y);
     ctx.rotate(rotation);
     ctx.moveTo(0, -size);
     ctx.lineTo(size, size);
     ctx.lineTo(-size, size);
-    ctx.fill();
     ctx.rotate(-rotation);
     ctx.translate(-x, -y);
+    ctx.closePath();
   }
 
   Unit.prototype.draw = function() {
@@ -73,9 +73,9 @@
         ctx.stroke();
       }
     }
-    // ctx.beginPath();
+    stroke_triangle([x, y], this.radius(), this.rotation);
     ctx.fillStyle = this.owner.color;
-    draw_triangle([x, y], this.radius() / 2, this.rotation);
+    ctx.fill();
     // ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
     // ctx.fillStyle = this.color();
     // ctx.fill();
@@ -84,13 +84,10 @@
     // ctx.lineWidth = 3;
     // ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom, 0, Math.PI * 2);
     // ctx.stroke();
-    if (selected[this.id]) {
-      ctx.beginPath();
-      ctx.strokeStyle = 'orange'
-      ctx.lineWidth = 1;
-      ctx.arc(Math.round(x), Math.round(y), this.radius() / zoom + 5, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    stroke_triangle([x, y], this.radius(), this.rotation);
+    ctx.strokeStyle = selected[this.id] ? 'orange' : 'grey';
+    ctx.lineWidth = 3;
+    ctx.stroke();
     resource_display.innerText = moi() && moi().resources.map(Math.floor);
   }
 
@@ -248,12 +245,11 @@
           if (target) {
             command(unit.id, 'set_target', target.id);
           } else {
-            offset = add(offset, [unit.radius() + 2, 0]);
             if (!event.altKey) {
               command(unit.id, 'clear_waypoints');
             }
             command(unit.id, 'add_waypoint', add(screen_to_game(cursor_location), offset));
-            offset = add(offset, [unit.radius() + 2, 0]);
+            offset = add(offset, [36, 0]);
           }
         }
       }

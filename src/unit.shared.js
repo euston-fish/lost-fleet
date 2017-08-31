@@ -58,7 +58,7 @@ Unit.prototype.color = function() {
 }
 
 Unit.prototype.radius = function () {
-  return mix((this.stats[0] + this.stats[1] + this.stats[2]) / 765, 4, 35);
+  return mix((this.stats[0] + this.stats[1] + this.stats[2]) / 765, 5, 17);
 }
 
 Unit.prototype.max_acceleration = function() {

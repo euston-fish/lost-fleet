@@ -4,7 +4,6 @@ let user_colors = [
   'blue',
   'red',
   'green',
-  'grey',
   'purple'
 ];
 
