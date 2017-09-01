@@ -1,17 +1,19 @@
 "use strict";
 
 (function() {
-  let user_colors = [
-    'blue',
-    'red',
-    'green',
-    'purple'
-  ];
+
+  // Kinda from this: https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
+  let random_color = () => {
+    let ratio = 0.618033988749895;
+    let num = Math.random();
+    num += ratio;
+    num %= 1;
+    num *= 360;
+    return 'hsl(' + num + ',50%,50%)';
+  };
 
   let sockets = {};
-
   let commands = [];
-
   let arena;
 
   module.exports = function(socket) {
@@ -38,7 +40,7 @@
     let x = normal(Math.random(), Math.random()) * 5000,
         y = normal(Math.random(), Math.random()) * 5000;
     
-    let color = user_colors.splice(Math.floor(Math.random() * user_colors.length), 1);
+    let color = random_color();
     commands.push(['introduce_user', {
       id: socket_id,
       color: color,
