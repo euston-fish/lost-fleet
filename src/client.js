@@ -276,11 +276,12 @@ window.addEventListener("load", function() {
     });
   });
 
-  el('create').onclick = () => {
+  let create_button = el('create');
+  create_button.onclick = () => {
     if (selected.values()[0]) {
       let cost = sliders.map((slider) => slider.get());
-      let subtracted = moi().subtracted_resources(...cost);
-      if (subtracted != '0,0,0') {
+      let subtracted = moi().subtracted_resources(cost);
+      if (subtracted.filter((a) => a >= 0).length == subtracted.length) {
         moi().resources = subtracted;
         command(selected.values()[0].id, 'create', cost);
       }
@@ -354,6 +355,8 @@ window.addEventListener("load", function() {
       selected = Object.assign({}, arena.users[me].units);
     } else if (event.key == 'q') {
       selected = {};
+    } else if (event.key == 'c') {
+      create_button.onclick();
     } else if (event.key == 'Delete' || event.key == 'Backspace') {
       (event.shiftKey ? selected.values() : [selected.values()[0]]).forEach((unit) => command(unit.id, 'destroy'));
     } else if (event.key == ' ' && selected.values()[0]) {
