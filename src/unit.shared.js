@@ -7,12 +7,14 @@ function Unit(arena, { id: id,
                 position: position,
                 stats: stats,
                 target_id: target_id,
+                target_type: target_type,
                 waypoints: waypoints,
                 velocity: velocity }) {
   this.arena = arena;
   this.id = (id !== undefined) ? id : arena.id_counter++;
   this.owner = arena.users[owner_id];
   this.position = position;
+  this.target_type = target_type;
   this.target_id = target_id;
   this.owner.units[this.id] = this;
   arena.units[this.id] = this;
@@ -97,13 +99,18 @@ Unit.prototype.create = function(stats) {
   new Unit(this.arena, { owner_id: this.owner.id, position: add(this.position, [10, 10]), stats: stats});
 }
 
-Unit.prototype.set_target = function (target) {
-  this.target_id = target;
+Unit.prototype.set_target = function (id, type) {
+  this.target_id = id;
+  this.target_type = type;
 }
 
 Unit.prototype.attack_target = function () {
-  // Attack another unit
-  let other = this.arena.units[this.target_id];
+  let other;
+  if (this.target_type == 'unit') {
+    other = this.arena.units[this.target_id];
+  } else if (this.target_type == 'asteroid') {
+    other = this.arena.asteroid_field.asteroids[this.target_id];
+  }
   if (!other) {
     this.target_id = null;
   } else if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {

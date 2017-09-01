@@ -306,10 +306,22 @@ window.addEventListener("load", function() {
           unit.owner.id !== me &&
           in_rounded_rectangle(unit.position, unit.radius(), screen_to_game(cursor_location))
         );
+      let target_type = 'unit';
+      if (!target) {
+        target_type = 'asteroid';
+        
+        target = arena.asteroid_field.in_range(
+          view_center[1] - canvas.height/2,
+          view_center[0] - canvas.width/2,
+          view_center[1] + canvas.height/2,
+          view_center[0] + canvas.width/2).values().find((ast) =>
+          in_rounded_rectangle(ast.position(), 50, screen_to_game(cursor_location)));
+        console.log(target);
+      }
       selected.values()
         .forEach((unit) => {
           if (target) {
-            command(unit.id, 'set_target', target.id);
+            command(unit.id, 'set_target', target.id, target_type);
           } else {
             if (!event.altKey) {
               command(unit.id, 'clear_waypoints');
