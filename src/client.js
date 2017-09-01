@@ -81,7 +81,7 @@ window.addEventListener("load", function() {
   Unit.prototype.draw = function() {
     let pos = game_to_screen(this.position);
     let other;
-    if (other = arena.units[this.target_id]) {
+    if (other = this.get_target()) {
       if (leng(sub(this.position, other.position)) < this.weapon_range()) {
         ctx.strokeStyle = this.owner.color;
         ctx.beginPath();
@@ -291,6 +291,7 @@ window.addEventListener("load", function() {
   });
 
   add_event_listener(canvas, 'mouseup', (event) => {
+    let game_cursor = screen_to_game(cursor_location);
     if (ui_state.mode === 'SELECT') {
       if (!ui_state.additive) selected = {};
       // Take all of our units
@@ -301,27 +302,31 @@ window.addEventListener("load", function() {
         .forEach((unit) => selected[unit.id] = unit);
     } else if (event.button === 2) {
       let offset = [0, 0];
+      let target_id;
+      let target_type = 'unit';
       let target = arena.units.values()
         .find((unit) =>
           unit.owner.id !== me &&
-          in_rounded_rectangle(unit.position, unit.radius(), screen_to_game(cursor_location))
+          in_rounded_rectangle(unit.position, unit.radius(), game_cursor)
         );
-      let target_type = 'unit';
-      if (!target) {
+      if (target) {
+        target_id = target.id;
+      } else {
         target_type = 'asteroid';
         
         target = arena.asteroid_field.in_range(
           view_center[1] - canvas.height/2,
           view_center[0] - canvas.width/2,
           view_center[1] + canvas.height/2,
-          view_center[0] + canvas.width/2).values().find((ast) =>
-          in_rounded_rectangle(ast.position(), 50, screen_to_game(cursor_location)));
-        console.log(target);
+          view_center[0] + canvas.width/2).values().find((ast) => ast.point_in(game_cursor));
+        if (target) {
+          target_id = target.get_index();
+        }
       }
       selected.values()
         .forEach((unit) => {
           if (target) {
-            command(unit.id, 'set_target', target.id, target_type);
+            command(unit.id, 'set_target', target_id, target_type);
           } else {
             if (!event.altKey) {
               command(unit.id, 'clear_waypoints');
@@ -330,11 +335,6 @@ window.addEventListener("load", function() {
             offset = add(offset, [36, 0]);
           }
         });
-      let target_asteroid = arena.asteroid_field
-        .in_range(view_center[1] - canvas.height, view_center[0] - canvas.width, view_center[1] + canvas.height, view_center[0] + canvas.width)
-        .values()
-        .forEach((asteroid) => { asteroid.selected = asteroid.point_in(screen_to_game(cursor_location)) });
-      console.log(target_asteroid);
     }
   });
 

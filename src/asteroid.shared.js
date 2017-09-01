@@ -77,7 +77,7 @@ Asteroid.asteroid_shapes = [
   [[1,0],[1,1],[2,1],[1,2],[1,3],[0,3],[-1,2],[-1,1],[0,1]]
 ];
 
-Asteroid.prototype.index = function() {
+Asteroid.prototype.get_index = function() {
   return [...this.block, this.index];
 }
 
@@ -110,4 +110,16 @@ Asteroid.prototype.point_in = function(point) {
     }
   }
   return wn !== 0;
+}
+
+// Minable things
+
+Asteroid.prototype.decrease_stats = function(amount) {
+  [0,1,2].forEach((i) => this.stats[i] = clamp(this.stats[i] - amount));
+  // FUCK YES THIS IS THE BEST JAVASCRIPT IS MY FAVORITE LANGUAGE EVA!!!!1111!!!
+  if (this.stats == '0,0,0') this.destroy();
+}
+
+Asteroid.prototype.destroy = function() {
+  delete this.field.block(...this.block)[this.index];
 }

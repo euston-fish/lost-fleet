@@ -99,18 +99,22 @@ Unit.prototype.create = function(stats) {
   new Unit(this.arena, { owner_id: this.owner.id, position: add(this.position, [10, 10]), stats: stats});
 }
 
+Unit.prototype.get_target = function() {
+  if (this.target_type == 'unit') {
+    return this.arena.units[this.target_id];
+  } else if (this.target_type == 'asteroid' && this.target_id) {
+    return this.arena.asteroid_field.asteroid(...this.target_id);
+  }
+}
+
 Unit.prototype.set_target = function (id, type) {
   this.target_id = id;
   this.target_type = type;
 }
 
 Unit.prototype.attack_target = function () {
-  let other;
-  if (this.target_type == 'unit') {
-    other = this.arena.units[this.target_id];
-  } else if (this.target_type == 'asteroid') {
-    other = this.arena.asteroid_field.asteroids[this.target_id];
-  }
+  if (!this.target_id) return;
+  let other = this.get_target();
   if (!other) {
     this.target_id = null;
   } else if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
@@ -118,8 +122,9 @@ Unit.prototype.attack_target = function () {
     other.decrease_stats(this.weapon_damage());
   } else {
     this.clear_waypoints();
+    let id = this.target_id;
     this.add_waypoint(other.position);
-    this.target_id = other.id;
+    this.target_id = id;
   }
 }
 
