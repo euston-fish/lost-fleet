@@ -109,11 +109,13 @@ window.addEventListener("load", function() {
     ctx.moveTo(...game_to_screen(this.shape()[0]));
     this.shape().forEach((pos) => ctx.lineTo(...game_to_screen(pos)))
     ctx.closePath();
-    ctx.fillStyle = this.selected ? 'orange' : ('rgb(' + this.stats.map((num) => Math.floor(num / 10)) + ')');
-    ctx.strokeStyle = 'grey';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    let shade = Math.floor(this.stats.reduce(nums.add, 0) / 30);
+    let color = this.stats.map((num) => Math.floor(num / 10));
+    ctx.fillStyle = 'rgb(' + [shade, shade, shade] + ')';
+    ctx.strokeStyle = 'rgb(' + color + ')';
+    ctx.lineWidth = 3;
     ctx.fill();
+    ctx.stroke();
     ctx.restore();
   }
 
