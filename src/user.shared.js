@@ -19,12 +19,8 @@ User.prototype.mine_resource = function(resource, efficiency) {
   [0,1,2].forEach((i) => this.resources[i] += (resource[i] - efficiency < 0 ? resource[i] : efficiency));
 }
 
-User.prototype.subtracted_resources = function(r, g, b) {
-  return [
-    clamp(this.resources[0] - r),
-    clamp(this.resources[1] - g),
-    clamp(this.resources[2] - b)
-  ];
+User.prototype.subtracted_resources = function(costs) {
+  return this.resources.map((val, idx) => val - costs[idx]);
 }
 
 User.prototype.centroid = function() {
