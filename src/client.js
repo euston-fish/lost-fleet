@@ -199,11 +199,11 @@ window.addEventListener("load", function() {
       ctx.strokeRect(...ui_state.origin, ...sub(cursor_location, ui_state.origin));
     }
     if (arena) {
+      arena.units.values().forEach((unit) => unit.draw());
       arena.asteroid_field
         .in_range(view_center[1] - canvas.height, view_center[0] - canvas.width, view_center[1] + canvas.height, view_center[0] + canvas.width)
         .values()
         .forEach((asteroid) => asteroid.draw());
-      arena.units.values().forEach((unit) => unit.draw());
       arena.users.values().forEach((user) => {
         let d = sub(user.centroid(), view_center);
         if(Math.abs(d[0]) > canvas.width/2 || Math.abs(d[1]) > canvas.height/2) {
