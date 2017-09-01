@@ -55,7 +55,7 @@ function Asteroid(field, { block: block,
   let rng = new RNG(field.x_coefficient*block[0] + field.y_coefficient*block[1] + field.i_coefficient*index);
   this.position = [this.block[0]*this.field.block_size+mix(rng.random(), 0, field.block_size),
                    this.block[1]*this.field.block_size+mix(rng.random(), 0, field.block_size)];
-  this.stats = [0, 0, 0].map(() => mix(rng.random(), 0, 255));
+  this.stats = [0, 0, 0].map(() => mix(rng.random(), 0, 2550));
   this.shape_id = Math.round(rng.random()*Asteroid.asteroid_shapes.length-0.5);
   this.rotation = rng.random()*2*Math.PI;
 }
@@ -82,7 +82,7 @@ Asteroid.prototype.get_index = function() {
 }
 
 Asteroid.prototype.size = function() {
-  return this.stats.reduce(nums.add, 0) / 10;
+  return this.stats.reduce(nums.add, 0) / 100;
 }
 
 Asteroid.prototype.shape = function() {
