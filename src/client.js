@@ -165,9 +165,9 @@ window.addEventListener("load", function() {
     if(previous_time) {
       dt = time - previous_time;
       let scroll_dir = [0, 0];
-      const arrows = [['Left', [-1, 0]], ['Right', [1, 0]], ['Up', [0, -1]], ['Down', [0, 1]]];
+      const arrows = [['a', [-1, 0]], ['d', [1, 0]], ['w', [0, -1]], ['s', [0, 1]]];
       arrows.forEach(([name, dir]) => {
-        if (pressed_keys["Arrow"+name]) scroll_dir = add(scroll_dir, dir);
+        if (pressed_keys[name]) scroll_dir = add(scroll_dir, dir);
       });
       view_center = add(view_center, scale(norm(scroll_dir), dt));
     }
@@ -299,10 +299,12 @@ window.addEventListener("load", function() {
       } else {
         selected = Object.assign({}, selection_groups[event.key] || {});
       }
-    } else if (event.key == 'm') {
+    } else if (event.key == ' ') {
       selected = Object.assign({}, arena.users[me].units);
     } else if (event.key == 'Delete' || event.key == 'Backspace') {
       selected.values().forEach((unit) => command(unit.id, 'destroy'))
+    } else if (event.key == 'f' && selected.values()[0]) {
+      view_center = selected.values()[0].position;
     }
   });
 
