@@ -101,31 +101,10 @@ window.addEventListener("load", function() {
     resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
   }
 
-  let asteroid = {
-    rotation: 2,
-    stats: [1280, 1280, 0],
-    position: [50, 50],
-    shape: 0
-  }
-
-  let asteroid_shapes = [
-    [[10, 10], [0, 10]]
-  ]
-
-  let draw_asteroid = ({rotation: rotation,
-      stats: stats,
-      position: [x, y],
-      shape: shape
-    }) => {
-    ctx.save();
-    let size = stats.reduce(nums.add, 0) / 30;
-    ctx.fillStyle = 'red';// 'rgb(' + stats.map((num) => num / 10) + ')';
-    ctx.translate(x, y);
-    ctx.rotate(rotation);
-    ctx.moveTo(0, 0);
-    asteroid_shapes[shape].forEach(([x, y]) => ctx.lineTo(x, y))
-    ctx.restore();
-    ctx.closePath();
+  Asteroid.prototype.draw = function() {
+    ctx.beginPath();
+    ctx.circle(game_to_screen(this.position()), this.radius());
+    ctx.fillStyle = '#555';
     ctx.fill();
   }
 
@@ -190,7 +169,6 @@ window.addEventListener("load", function() {
 
   let previous_time = null;
   let draw = (time) => {
-    draw_asteroid(asteroid);
     if(previous_time) {
       dt = time - previous_time;
       let scroll_dir = [0, 0];
@@ -210,6 +188,10 @@ window.addEventListener("load", function() {
       ctx.strokeRect(...ui_state.origin, ...sub(cursor_location, ui_state.origin));
     }
     if (arena) {
+      arena.asteroid_field
+        .in_range(view_center[1] - canvas.height/2, view_center[0] - canvas.width/2, view_center[1] + canvas.height/2, view_center[0] + canvas.width/2)
+        .values()
+        .forEach((asteroid) => asteroid.draw());
       arena.units.values().forEach((unit) => unit.draw());
       arena.users.values().forEach((user) => {
         let d = sub(user.centroid(), view_center);

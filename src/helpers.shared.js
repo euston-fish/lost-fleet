@@ -14,7 +14,7 @@ let
   },
   clamp = (val) => Math.max(0, val),
   mix = (val, min, max) => min + (max - min) * val,
-  normal = (uniform_1, uniform_2) => Math.sqrt(-2 * Math.log(uniform_1)) * Math.cos(2 * Math.PI * uniform_2),
+  normal = (uniform_1, uniform_2) => Math.sqrt(-2 * Math.log(uniform_1)) * Math.cos(2 * Math.PI * uniform_2), // Using Box-Muller
   towards = (from, to, inc) => from < to ? min(from + inc, to) : max(to, from - inc),
   scalar_angle = ([dx, dy]) => Math.atan2(dy, dx) + (Math.PI * 0.5),
   nums = {
@@ -59,11 +59,11 @@ function RNG(seed) {
 }
 
 RNG.prototype.random = function() {
-  return ((this.seed = this.seed * 16087 % 2147483647) - 1)/ 2147483647;
+  return (this.random_int() - 1)/ 2147483647;
 }
 
 RNG.prototype.random_int = function() {
-  return this.seed = this.seed * 16087 % 2147483647;
+  return this.seed = (this.seed * this.seed * 59749 + this.seed * 16087) % 2147483647;
 }
 
 Object.prototype.values = function() {

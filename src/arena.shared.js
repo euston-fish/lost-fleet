@@ -2,6 +2,7 @@ function Arena({ users: users, id_counter: id_counter }) {
   this.users = {};
   this.units = {};
   this.id_counter = id_counter;
+  this.asteroid_field = new AsteroidField(93454853);
 
   for (var user of users) new User(this, user);
 }
