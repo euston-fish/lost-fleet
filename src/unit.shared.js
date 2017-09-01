@@ -120,11 +120,6 @@ Unit.prototype.attack_target = function () {
   } else if (leng(add(this.position, inv(other.position))) < this.weapon_range()) {
     this.owner.mine_resource(other.stats, this.mine_efficiency())
     other.decrease_stats(this.weapon_damage());
-  } else {
-    this.clear_waypoints();
-    let id = this.target_id;
-    this.add_waypoint(other.position);
-    this.target_id = id;
   }
 }
 
@@ -137,8 +132,9 @@ Unit.prototype.decrease_stats = function(amount) {
 }
 
 Unit.prototype.acceleration = function() {
-  if(this.waypoints.length !== 0) {
-    let target = this.waypoints[0];
+  if(this.waypoints.length !== 0 || (this.get_target() && leng(sub(this.get_target().position, this.position)) > this.weapon_range())) {
+    let target = this.waypoints.length !== 0 ? this.waypoints[0] :
+      add(this.get_target().position, scale(norm(sub(this.position, this.get_target().position)), this.weapon_range() - 5));
     let dir_vec = add(target, inv(this.position));
     let target_vel = scale(norm(dir_vec), this.max_acceleration() * (Math.sqrt(1+8*leng(dir_vec)/this.max_acceleration())-1)/2);
     if(Math.abs(dir_vec[0]) < EPSILON && Math.abs(dir_vec[1]) < EPSILON && leng(this.velocity) < this.max_acceleration()) {
