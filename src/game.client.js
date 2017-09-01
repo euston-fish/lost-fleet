@@ -1,4 +1,4 @@
-window.addEventListener("load", function() {
+let start_game = (socket, on_finished) => {
   let me, mothership, cursor_location, selected = {};
   let selection_groups = {};
   let sliders = [];
@@ -11,7 +11,6 @@ window.addEventListener("load", function() {
   let resource_display = el('resources');;
   let canvas = el('c');
   let ctx = canvas.getContext('2d');
-  let socket = io({ upgrade: false, transports: ["websocket"] });
   let add_event_listener = (object, ...args) => object.addEventListener(...args);
   let w = window;
 
@@ -383,5 +382,4 @@ window.addEventListener("load", function() {
     console.log("error")
   });
   window.requestAnimationFrame(draw);
-
-}, false);
+};
