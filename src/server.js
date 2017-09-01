@@ -42,7 +42,7 @@
     commands.push(['introduce_user', {
       id: socket_id,
       color: color,
-      units: [{ position: [x, y], stats: [255, 255, 255] }]
+      units: [{ position: [x, y], stats: [2550, 2550, 2550] }]
     }]);
     
     socket.on('disconnect', () => {

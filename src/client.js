@@ -54,9 +54,9 @@ window.addEventListener("load", function() {
       }
       if (!user_was_removed && arena.users.values().length != 1) {
         if (moi().units.values().length === 0) {
-          el('b').style.backgroundColor = '#781A05';
+          el('q').style.backgroundColor = '#781A05';
         } else if (arena.units.values().filter((unit) => unit.owner.id != me).length === 0) {
-          el('b').style.backgroundColor = '#078219';
+          el('q').style.backgroundColor = '#078219';
         }
       }
     }
@@ -98,7 +98,7 @@ window.addEventListener("load", function() {
     ctx.strokeStyle = selected[this.id] ? 'orange' : 'grey';
     ctx.lineWidth = 3;
     ctx.stroke();
-    resource_display.innerText = moi() && moi().resources.map(Math.floor);
+    resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
   }
 
   let draw_stars = (e, s, min, max) => {
@@ -205,7 +205,6 @@ window.addEventListener("load", function() {
   }
 
   function handle_tick(commands) {
-    //console.log('tick', commands);
     for (var command of commands) {
       arena.receive(command);
     }
@@ -228,7 +227,7 @@ window.addEventListener("load", function() {
 
   el('create').onclick = () => {
     if (selected.values()[0]) {
-      let cost = [slider_vals.r, slider_vals.g, slider_vals.b];
+      let cost = [slider_vals.r, slider_vals.g, slider_vals.b].map(nums.multiply.curry(10));
       let subtracted = moi().subtracted_resources(...cost);
       if (subtracted != '0,0,0') {
         moi().resources = subtracted;
@@ -300,7 +299,7 @@ window.addEventListener("load", function() {
       } else {
         selected = Object.assign({}, selection_groups[event.key] || {});
       }
-    } else if (event.key == 'a') {
+    } else if (event.key == 'm') {
       selected = Object.assign({}, arena.users[me].units);
     } else if (event.key == 'Delete' || event.key == 'Backspace') {
       selected.values().forEach((unit) => command(unit.id, 'destroy'))

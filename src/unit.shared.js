@@ -58,11 +58,11 @@ Unit.prototype.color = function() {
 }
 
 Unit.prototype.radius = function () {
-  return mix((this.stats[0] + this.stats[1] + this.stats[2]) / 765, 5, 17);
+  return mix((this.stats[0] + this.stats[1] + this.stats[2]) / 7650, 5, 17);
 }
 
 Unit.prototype.max_acceleration = function() {
-  return this.stats[0] / 30.0;
+  return this.stats[0] / 500.0;
 }
 
 Unit.prototype.weapon_range = function() {
@@ -70,7 +70,7 @@ Unit.prototype.weapon_range = function() {
 }
 
 Unit.prototype.weapon_damage = function() {
-  return this.stats[2] / 11;
+  return this.stats[2] / 110;
 }
 
 Unit.prototype.mine_efficiency = function() {

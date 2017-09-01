@@ -16,7 +16,17 @@ let
   mix = (val, min, max) => min + (max - min) * val,
   normal = (uniform_1, uniform_2) => Math.sqrt(-2 * Math.log(uniform_1)) * Math.cos(2 * Math.PI * uniform_2),
   towards = (from, to, inc) => from < to ? min(from + inc, to) : max(to, from - inc),
-  scalar_angle = ([dx, dy]) => Math.atan2(dy, dx) + (Math.PI * 0.5);
+  scalar_angle = ([dx, dy]) => Math.atan2(dy, dx) + (Math.PI * 0.5),
+  nums = {
+    multiply: (a, b) => a * b,
+    divide: (a, b) => a / b,
+    add: (a, b) => a + b,
+    subtract: (a, b) => a - b,
+  };
+
+Function.prototype.curry = function(...init_args) {
+  return (...extra_args) => this(...init_args.concat(extra_args));
+}
 
 function in_rounded_rectangle(point, radius, corner_a, corner_b) {
   if(!corner_b) corner_b = corner_a;

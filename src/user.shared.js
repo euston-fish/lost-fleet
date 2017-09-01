@@ -2,7 +2,7 @@ function User(arena, { id: id, units: units, resources: resources, color: color 
   this.id = (id !== undefined) ? id : arena.id_counter++;
   arena.users[this.id] = this;
   this.units = {};
-  this.resources = resources || [255, 255, 255];
+  this.resources = resources || [2550, 2550, 2550];
   for(let unit of (units || [])) new Unit(arena, Object.assign({ owner_id: this.id }, unit));
   this.color = color;
 }
