@@ -101,32 +101,15 @@ window.addEventListener("load", function() {
     resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
   }
 
-  let asteroid_shapes = [
-    [[1,0],[1,2],[0,1]],
-    [[1,1],[0,3],[-1,3],[-1,2],[-2,1]],
-    [[1,1],[1,2],[-1,3],[-1,1]],
-    [[1,0],[1,1],[2,2],[0,3],[-1,1]],
-    [[2,2],[1,3],[1,4],[0,5],[-1,5],[-2,3],[-1,2],[-1,1]],
-    [[2,0],[3,2],[2,4],[1,4],[0,3],[-2,2]],
-    [[1,2],[1,3],[0,4],[-2,3],[-1,1]],
-    [[1,1],[2,1],[3,3],[2,4],[0,4],[-1,3],[-1,1]],
-    [[1,0],[1,1],[2,0],[3,1],[2,3],[1,3],[0,2],[-1,2],[-1,1]],
-    [[1,0],[2,1],[3,3],[2,5],[1,4],[1,3],[0,3],[-1,4],[-1,2],[0,1]],
-    [[1,1],[1,3],[-1,2]],
-    [[1,1],[0,3],[-1,2],[-1,1]],
-    [[2,1],[3,2],[3,3],[2,4],[1,2],[0,2]],
-    [[1,0],[1,1],[2,1],[1,2],[1,3],[0,3],[-1,2],[-1,1],[0,1]]
-  ]
-
   Asteroid.prototype.draw = function() {
     ctx.beginPath();
     ctx.save();
-    ctx.translate(...game_to_screen(this.position()));
-    ctx.rotate(this.rotation);
-    ctx.moveTo(0, 0);
-    asteroid_shapes[this.shape].forEach(([x, y]) => ctx.lineTo(this.size() * x, this.size() * y))
+    //ctx.translate(...game_to_screen(this.position));
+    //ctx.rotate(this.rotation);
+    ctx.moveTo(...game_to_screen(this.shape()[0]));
+    this.shape().forEach((pos) => ctx.lineTo(...game_to_screen(pos)))
     ctx.closePath();
-    ctx.fillStyle = 'rgb(' + this.stats.map((num) => num / 10) + ')';
+    ctx.fillStyle = this.selected ? 'orange' : ('rgb(' + this.stats.map((num) => num / 10) + ')');
     ctx.fill();
     ctx.restore();
   }
@@ -212,7 +195,7 @@ window.addEventListener("load", function() {
     }
     if (arena) {
       arena.asteroid_field
-        .in_range(view_center[1] - canvas.height/2, view_center[0] - canvas.width/2, view_center[1] + canvas.height/2, view_center[0] + canvas.width/2)
+        .in_range(view_center[1] - canvas.height, view_center[0] - canvas.width, view_center[1] + canvas.height, view_center[0] + canvas.width)
         .values()
         .forEach((asteroid) => asteroid.draw());
       arena.units.values().forEach((unit) => unit.draw());
@@ -331,6 +314,11 @@ window.addEventListener("load", function() {
             offset = add(offset, [36, 0]);
           }
         });
+      let target_asteroid = arena.asteroid_field
+        .in_range(view_center[1] - canvas.height, view_center[0] - canvas.width, view_center[1] + canvas.height, view_center[0] + canvas.width)
+        .values()
+        .forEach((asteroid) => { asteroid.selected = asteroid.point_in(screen_to_game(cursor_location)) });
+      console.log(target_asteroid);
     }
   });
 

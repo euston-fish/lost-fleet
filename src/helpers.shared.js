@@ -22,7 +22,9 @@ let
     divide: (a, b) => a / b,
     add: (a, b) => a + b,
     subtract: (a, b) => a - b,
-  };
+  },
+  is_left = (p0, p1, p2) => ((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]))
+  rotate = (p, t) => [p[0]*Math.cos(t) - p[1]*Math.sin(t), p[1]*Math.cos(t)+p[0]*Math.sin(t)];
 
 Function.prototype.curry = function(...init_args) {
   return (...extra_args) => this(...init_args.concat(extra_args));

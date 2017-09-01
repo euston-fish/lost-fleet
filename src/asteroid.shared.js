@@ -48,17 +48,57 @@ function Asteroid(field, { block: block,
   this.block = block;
   this.index = index;
   let rng = new RNG(field.x_coefficient*block[0] + field.y_coefficient*block[1] + field.i_coefficient*index);
-  this.x = mix(rng.random(), 0, field.block_size);
-  this.y = mix(rng.random(), 0, field.block_size);
+  this.position = [this.block[0]*this.field.block_size+mix(rng.random(), 0, field.block_size),
+                   this.block[1]*this.field.block_size+mix(rng.random(), 0, field.block_size)];
   this.stats = [0, 0, 0].map(() => mix(rng.random(), 0, 255));
-  this.shape = Math.round(rng.random()*13);
+  this.shape_id = Math.round(rng.random()*Asteroid.asteroid_shapes.length-0.5);
   this.rotation = rng.random()*2*Math.PI;
 }
 
-Asteroid.prototype.position = function() {
-  return [this.block[0]*this.field.block_size+this.x, this.block[1]*this.field.block_size+this.y];
-}
+Asteroid.asteroid_shapes = [
+  [[1,0],[1,2],[0,1]],
+  [[1,1],[0,3],[-1,3],[-1,2],[-2,1]],
+  [[1,1],[1,2],[-1,3],[-1,1]],
+  [[1,0],[1,1],[2,2],[0,3],[-1,1]],
+  [[2,2],[1,3],[1,4],[0,5],[-1,5],[-2,3],[-1,2],[-1,1]],
+  [[2,0],[3,2],[2,4],[1,4],[0,3],[-2,2]],
+  [[1,2],[1,3],[0,4],[-2,3],[-1,1]],
+  [[1,1],[2,1],[3,3],[2,4],[0,4],[-1,3],[-1,1]],
+  [[1,0],[1,1],[2,0],[3,1],[2,3],[1,3],[0,2],[-1,2],[-1,1]],
+  [[1,0],[2,1],[3,3],[2,5],[1,4],[1,3],[0,3],[-1,4],[-1,2],[0,1]],
+  [[1,1],[1,3],[-1,2]],
+  [[1,1],[0,3],[-1,2],[-1,1]],
+  [[2,1],[3,2],[3,3],[2,4],[1,2],[0,2]],
+  [[1,0],[1,1],[2,1],[1,2],[1,3],[0,3],[-1,2],[-1,1],[0,1]]
+];
 
 Asteroid.prototype.size = function() {
   return this.stats.reduce(nums.add, 0) / 10;
+}
+
+Asteroid.prototype.shape = function() {
+  return Asteroid.asteroid_shapes[this.shape_id]
+    .map((p) => add(this.position, rotate(scale(p, this.size()), this.rotation)));
+}
+
+// point in polygon from http://geomalgorithms.com/a03-_inclusion.html
+Asteroid.prototype.point_in = function(point) {
+  let wn = 0;
+  let shape = this.shape();
+  for (let i=0; i<shape.length; i++) {
+    if (shape[i][1] <= point[1]) {
+      if (shape[(i+1)%shape.length][1] > point[1]) {
+        if (is_left(shape[i], shape[(i+1)%shape.length], point) > 0) {
+          wn++;
+        }
+      }
+    } else {
+      if (shape[(i+1)%shape.length][1] <= point[1]) {
+        if (is_left(shape[i], shape[(i+1)%shape.length], point) < 0) {
+          wn--;
+        }
+      }
+    }
+  }
+  return wn !== 0;
 }
