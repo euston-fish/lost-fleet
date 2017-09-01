@@ -4,12 +4,7 @@
 
   // Kinda from this: https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
   let random_color = () => {
-    let ratio = 0.618033988749895;
-    let num = Math.random();
-    num += ratio;
-    num %= 1;
-    num *= 360;
-    return 'hsl(' + num + ',50%,50%)';
+    return 'hsl(' + ((Math.random() + 0.618033988749895) * 360) % 360 + ',50%,50%)';
   };
 
   let sockets = {};
