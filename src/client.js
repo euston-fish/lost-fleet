@@ -104,12 +104,26 @@ window.addEventListener("load", function() {
   let asteroid = {
     rotation: 2,
     stats: [1280, 1280, 0],
-    position: [50, 50],
-    shape: 0
+    position: [500, 500],
+    shape: 10
   }
 
+  // These all start at [0, 0]
   let asteroid_shapes = [
-    [[10, 10], [0, 10]]
+    [[1,0],[1,2],[0,1]],
+    [[1,1],[0,3],[-1,3],[-1,2],[-2,1]],
+    [[1,1],[1,2],[-1,3],[-1,1]],
+    [[1,0],[1,1],[2,2],[0,3],[-1,1]],
+    [[2,2],[1,3],[1,4],[0,5],[-1,5],[-2,3],[-1,2],[-1,1]],
+    [[2,0],[3,2],[2,4],[1,4],[0,3],[-2,2]],
+    [[1,2],[1,3],[0,4],[-2,3],[-1,1]],
+    [[1,1],[2,1],[3,3],[2,4],[0,4],[-1,3],[-1,1]],
+    [[1,0],[1,1],[2,0],[3,1],[2,3],[1,3],[0,2],[-1,2],[-1,1]],
+    [[1,0],[2,1],[3,3],[2,5],[1,4],[1,3],[0,3],[-1,4],[-1,2],[0,1]],
+    [[1,1],[1,3],[-1,2]],
+    [[1,1],[0,3],[-1,2],[-1,1]],
+    [[2,1],[3,2],[3,3],[2,4],[1,2],[0,2]],
+    [[1,0],[1,1],[2,1],[1,2],[1,3],[0,3],[-1,2],[-1,1],[0,1]]
   ]
 
   let draw_asteroid = ({rotation: rotation,
@@ -118,15 +132,15 @@ window.addEventListener("load", function() {
       shape: shape
     }) => {
     ctx.save();
-    let size = stats.reduce(nums.add, 0) / 30;
-    ctx.fillStyle = 'red';// 'rgb(' + stats.map((num) => num / 10) + ')';
+    let size = stats.reduce(nums.add, 0) / 50;
     ctx.translate(x, y);
     ctx.rotate(rotation);
     ctx.moveTo(0, 0);
-    asteroid_shapes[shape].forEach(([x, y]) => ctx.lineTo(x, y))
-    ctx.restore();
+    asteroid_shapes[shape].forEach(([x, y]) => ctx.lineTo(size * x, size * y))
     ctx.closePath();
+    ctx.fillStyle = 'rgb(' + stats.map((num) => num / 10) + ')';
     ctx.fill();
+    ctx.restore();
   }
 
   let draw_stars = (e, s, min, max) => {
@@ -190,7 +204,6 @@ window.addEventListener("load", function() {
 
   let previous_time = null;
   let draw = (time) => {
-    draw_asteroid(asteroid);
     if(previous_time) {
       dt = time - previous_time;
       let scroll_dir = [0, 0];
@@ -230,6 +243,7 @@ window.addEventListener("load", function() {
         }
       });
     }
+    draw_asteroid(asteroid);
     window.requestAnimationFrame(draw);
   }
 
