@@ -51,12 +51,14 @@ function Asteroid(field, { block: block,
   this.x = mix(rng.random(), 0, field.block_size);
   this.y = mix(rng.random(), 0, field.block_size);
   this.stats = [0, 0, 0].map(() => mix(rng.random(), 0, 255));
+  this.shape = Math.round(rng.random()*13);
+  this.rotation = rng.random()*2*Math.PI;
 }
 
 Asteroid.prototype.position = function() {
   return [this.block[0]*this.field.block_size+this.x, this.block[1]*this.field.block_size+this.y];
 }
 
-Asteroid.prototype.radius = function() {
-  return this.stats.reduce(nums.add, 0) / 200 + 10;
+Asteroid.prototype.size = function() {
+  return this.stats.reduce(nums.add, 0) / 10;
 }

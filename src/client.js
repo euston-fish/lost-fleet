@@ -1,7 +1,7 @@
 window.addEventListener("load", function() {
   let me, mothership, cursor_location, selected = {};
   let selection_groups = {};
-  let slider_vals;
+  let sliders = [];
   let arena;
   let view_center = [0, 0];
   let moi = () => arena.users[me];
@@ -101,11 +101,34 @@ window.addEventListener("load", function() {
     resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
   }
 
+  let asteroid_shapes = [
+    [[1,0],[1,2],[0,1]],
+    [[1,1],[0,3],[-1,3],[-1,2],[-2,1]],
+    [[1,1],[1,2],[-1,3],[-1,1]],
+    [[1,0],[1,1],[2,2],[0,3],[-1,1]],
+    [[2,2],[1,3],[1,4],[0,5],[-1,5],[-2,3],[-1,2],[-1,1]],
+    [[2,0],[3,2],[2,4],[1,4],[0,3],[-2,2]],
+    [[1,2],[1,3],[0,4],[-2,3],[-1,1]],
+    [[1,1],[2,1],[3,3],[2,4],[0,4],[-1,3],[-1,1]],
+    [[1,0],[1,1],[2,0],[3,1],[2,3],[1,3],[0,2],[-1,2],[-1,1]],
+    [[1,0],[2,1],[3,3],[2,5],[1,4],[1,3],[0,3],[-1,4],[-1,2],[0,1]],
+    [[1,1],[1,3],[-1,2]],
+    [[1,1],[0,3],[-1,2],[-1,1]],
+    [[2,1],[3,2],[3,3],[2,4],[1,2],[0,2]],
+    [[1,0],[1,1],[2,1],[1,2],[1,3],[0,3],[-1,2],[-1,1],[0,1]]
+  ]
+
   Asteroid.prototype.draw = function() {
     ctx.beginPath();
-    ctx.circle(game_to_screen(this.position()), this.radius());
-    ctx.fillStyle = '#555';
+    ctx.save();
+    ctx.translate(...game_to_screen(this.position()));
+    ctx.rotate(this.rotation);
+    ctx.moveTo(0, 0);
+    asteroid_shapes[this.shape].forEach(([x, y]) => ctx.lineTo(this.size() * x, this.size() * y))
+    ctx.closePath();
+    ctx.fillStyle = 'rgb(' + this.stats.map((num) => num / 10) + ')';
     ctx.fill();
+    ctx.restore();
   }
 
   let draw_stars = (e, s, min, max) => {
@@ -219,29 +242,40 @@ window.addEventListener("load", function() {
     for (var command of commands) {
       arena.receive(command);
     }
-    ['r', 'g', 'b'].forEach((range, i) => {
-      el(range).max = moi().resources[i] / 10;
-    });
     arena.tick();
   }
 
   let command = (...args) => socket.emit('command', args)
   socket.on('tick', handle_tick);
 
-  slider_vals = {};
-  ['r', 'g', 'b'].forEach((range) => {
-    let disp = el(range + '-val');
-    let slider = el(range);
-    slider.onchange = () => {
-      disp.innerText = slider.value;
-      slider_vals[range] = +slider.value;
-    }
-    slider_vals[range] = 0;
+  let make = (container, ...types) => {
+    let res = types.map((type) => document.createElement(type));
+    res.forEach((elem) => container.appendChild(elem));
+    return res;
+  }
+  [0, 1, 2].forEach((idx) => {
+    let [slider, entry, _] = make(el('sliders'), "input", "input", "br");
+    slider.type = 'range';
+    slider.style.width = '10em';
+    slider.max = 255;
+    slider.value = 10;
+    entry.value = 10;
+    entry.style.width = '5em';
+    entry.type = 'number';
+    slider.onchange = () => entry.value = slider.value;
+    entry.onchange = () => slider.value = max(0, min(entry.value, 255));
+    sliders.push({
+      get: () => slider.value * 10,
+      set: (val) => {
+        slider.value = val / 10;
+        entry.value = val / 10;
+      }
+    });
   });
 
   el('create').onclick = () => {
     if (selected.values()[0]) {
-      let cost = [slider_vals.r, slider_vals.g, slider_vals.b].map(nums.multiply.curry(10));
+      let cost = sliders.map((slider) => slider.get());
       let subtracted = moi().subtracted_resources(...cost);
       if (subtracted != '0,0,0') {
         moi().resources = subtracted;
@@ -313,11 +347,13 @@ window.addEventListener("load", function() {
       } else {
         selected = Object.assign({}, selection_groups[event.key] || {});
       }
-    } else if (event.key == ' ') {
+    } else if (event.key == 'e') {
       selected = Object.assign({}, arena.users[me].units);
+    } else if (event.key == 'q') {
+      selected = {};
     } else if (event.key == 'Delete' || event.key == 'Backspace') {
-      selected.values().forEach((unit) => command(unit.id, 'destroy'))
-    } else if (event.key == 'f' && selected.values()[0]) {
+      (event.shiftKey ? selected.values() : [selected.values()[0]]).forEach((unit) => command(unit.id, 'destroy'));
+    } else if (event.key == ' ' && selected.values()[0]) {
       view_center = selected.values()[0].position;
     }
   });
