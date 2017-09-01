@@ -12,31 +12,36 @@ function AsteroidField(seed) {
   this.asteroids = {}
 }
 
-AsteroidField.prototype.in_range = function(t, l, b, r) {
+AsteroidField.prototype.block = function(x, y) {
   let make_rng = (x, y) => new RNG(this.x_coefficient*x + this.y_coefficient*y + this.constant);
 
-  let asteroids = {};
-  
-  for (let x = Math.floor(l / this.block_size); x < Math.ceil(r / this.block_size); x++) {
-    for (let y = Math.floor(t / this.block_size); y < Math.ceil(b / this.block_size); y++) {
-      if(!this.asteroids[[x, y]+'']) {
-        this.asteroids[[x, y]+''] = {};
-        let num_asteroids = 0;
-        for(let dx=-1; dx<=1; dx++) {
-          for(let dy=-1; dy<=1; dy++) {
-            let rng = make_rng(x+dx, y+dy);
-            rng.random();
-            if(rng.random() > 0.93) {
-              num_asteroids += rng.random() > 0.7 ? 1 : 0;
-            }
-          }
-        }
-        let rng = make_rng(x, y);
-        while(num_asteroids-- > 0) {
-          this.asteroids[[x, y]+''][num_asteroids] = new Asteroid(this, { block: [x, y], index: num_asteroids });
+  if(!this.asteroids[[x, y]+'']) {
+    this.asteroids[[x, y]+''] = {};
+    let num_asteroids = 0;
+    for(let dx=-1; dx<=1; dx++) {
+      for(let dy=-1; dy<=1; dy++) {
+        let rng = make_rng(x+dx, y+dy);
+        if(rng.random() > 0.93) {
+          num_asteroids += rng.random() > 0.7 ? 1 : 0;
         }
       }
-      this.asteroids[[x, y]+''].values().forEach((asteroid) => asteroids[[x, y]+':'+asteroid.index] = asteroid);
+    }
+    while(num_asteroids-- > 0) {
+      this.asteroids[[x, y]+''][num_asteroids] = new Asteroid(this, { block: [x, y], index: num_asteroids });
+    }
+  }
+  return this.asteroids[[x, y]+''];
+}
+
+AsteroidField.prototype.asteroid = function(x, y, i) {
+  return this.block(x, y)[i];
+}
+
+AsteroidField.prototype.in_range = function(t, l, b, r) {
+  let asteroids = {};
+  for (let x = Math.floor(l / this.block_size); x < Math.ceil(r / this.block_size); x++) {
+    for (let y = Math.floor(t / this.block_size); y < Math.ceil(b / this.block_size); y++) {
+      this.block(x, y).values().forEach((asteroid) => asteroids[[x, y]+':'+asteroid.index] = asteroid);
     }
   }
   return asteroids;
@@ -71,6 +76,10 @@ Asteroid.asteroid_shapes = [
   [[2,1],[3,2],[3,3],[2,4],[1,2],[0,2]],
   [[1,0],[1,1],[2,1],[1,2],[1,3],[0,3],[-1,2],[-1,1],[0,1]]
 ];
+
+Asteroid.prototype.index = function() {
+  return [...this.block, this.index];
+}
 
 Asteroid.prototype.size = function() {
   return this.stats.reduce(nums.add, 0) / 10;
