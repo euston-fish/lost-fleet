@@ -101,6 +101,34 @@ window.addEventListener("load", function() {
     resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
   }
 
+  let asteroid = {
+    rotation: 2,
+    stats: [1280, 1280, 0],
+    position: [50, 50],
+    shape: 0
+  }
+
+  let asteroid_shapes = [
+    [[10, 10], [0, 10]]
+  ]
+
+  let draw_asteroid = ({rotation: rotation,
+      stats: stats,
+      position: [x, y],
+      shape: shape
+    }) => {
+    ctx.save();
+    let size = stats.reduce(nums.add, 0) / 30;
+    ctx.fillStyle = 'red';// 'rgb(' + stats.map((num) => num / 10) + ')';
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.moveTo(0, 0);
+    asteroid_shapes[shape].forEach(([x, y]) => ctx.lineTo(x, y))
+    ctx.restore();
+    ctx.closePath();
+    ctx.fill();
+  }
+
   let draw_stars = (e, s, min, max) => {
     let star_canvas = el(e);
     let star_ctx = star_canvas.getContext('2d');
@@ -162,6 +190,7 @@ window.addEventListener("load", function() {
 
   let previous_time = null;
   let draw = (time) => {
+    draw_asteroid(asteroid);
     if(previous_time) {
       dt = time - previous_time;
       let scroll_dir = [0, 0];
@@ -208,6 +237,9 @@ window.addEventListener("load", function() {
     for (var command of commands) {
       arena.receive(command);
     }
+    ['r', 'g', 'b'].forEach((range, i) => {
+      el(range).max = moi().resources[i] / 10;
+    });
     arena.tick();
   }
 
