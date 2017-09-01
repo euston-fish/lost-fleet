@@ -126,7 +126,10 @@ window.addEventListener("load", function() {
     ctx.moveTo(0, 0);
     asteroid_shapes[this.shape].forEach(([x, y]) => ctx.lineTo(this.size() * x, this.size() * y))
     ctx.closePath();
-    ctx.fillStyle = 'rgb(' + this.stats.map((num) => num / 10) + ')';
+    ctx.fillStyle = 'rgb(' + this.stats.map((num) => Math.floor(num / 10)) + ')';
+    ctx.strokeStyle = 'grey';
+    ctx.lineWidth = 2;
+    ctx.stroke();
     ctx.fill();
     ctx.restore();
   }
