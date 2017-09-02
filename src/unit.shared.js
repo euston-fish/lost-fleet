@@ -64,11 +64,11 @@ Unit.prototype.radius = function () {
 }
 
 Unit.prototype.max_acceleration = function() {
-  return this.stats[0] / 500.0;
+  return (this.stats[0] + 1) / 500.0;
 }
 
 Unit.prototype.weapon_range = function() {
-  return 200; //Math.max(Math.abs(this.stats[0] - this.stats[1]), 20);
+  return this.stats[1] / 3;
 }
 
 Unit.prototype.weapon_damage = function() {
