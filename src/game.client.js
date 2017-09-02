@@ -309,7 +309,6 @@ let start_game = (socket, on_finished) => {
       let target_type = 'unit';
       let target = arena.units.values()
         .find((unit) =>
-          unit.owner.id !== me &&
           in_rounded_rectangle(unit.position, unit.radius(), game_cursor)
         );
       if (target) {
@@ -329,7 +328,11 @@ let start_game = (socket, on_finished) => {
       selected.values()
         .forEach((unit) => {
           if (target) {
-            command(unit.id, 'set_target', target_id, target_type);
+            if (target_type == 'unit' && target.owner.id == me) {
+              command(unit.id, 'set_parent', target_id)
+            } else {
+              command(unit.id, 'set_target', target_id, target_type);
+            }
           } else {
             if (!event.altKey) {
               command(unit.id, 'clear_waypoints');
