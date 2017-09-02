@@ -346,29 +346,41 @@ let start_game = (socket, on_finished) => {
 
   add_event_listener(canvas, 'mouseup', (event) => ui_state = { mode: 'NONE' });
 
+  let delete_fun = () => !sliders.any_focussed() && (event.shiftKey ? selected.values() : [selected.values()[0]]).forEach((unit) => command(unit.id, 'destroy'));
+  let shortcut_map = {
+    e: () => selected = Object.assign({}, arena.users[me].units),
+    q: () => selected = {},
+    c: create_button.onclick,
+    Delete: delete_fun,
+    Backspace: delete_fun,
+    " ": () =>  { if (selected.values()[0]) view_center = selected.values()[0].position; }
+  };
+
   add_event_listener(w, 'keydown', (event) => {
     pressed_keys[event.key] = event;
-    if (event.shiftKey) pressed_keys['shift'] = event;
-    if (event.ctrlKey) pressed_keys['ctrl'] = event;
-    if (event.altKey) pressed_keys['alt'] = event;
+    let shortcut_description = '';
+    if (event.ctrlKey) {
+      shortcut_description += 'C-';
+      pressed_keys['ctrl'] = event;
+    }
+    if (event.altKey) {
+      shortcut_description += 'M-';
+      pressed_keys['alt'] = event;
+    }
+    if (event.shiftKey) {
+      shortcut_description += 'S-';
+      pressed_keys['shift'] = event;
+    }
+
     if(/^\d$/.test(event.key)) {
       if (event.ctrlKey) {
         selection_groups[event.key] = Object.assign({}, selected);
       } else {
         selected = Object.assign({}, selection_groups[event.key] || {});
       }
-    } else if (event.key == 'e') {
-      selected = Object.assign({}, arena.users[me].units);
-    } else if (event.key == 'q') {
-      selected = {};
-    } else if (event.key == 'c') {
-      create_button.onclick();
-    } else if (event.key == 'Delete' || event.key == 'Backspace') {
-      if (!sliders.any_focussed()) {
-        (event.shiftKey ? selected.values() : [selected.values()[0]]).forEach((unit) => command(unit.id, 'destroy'));
-      }
-    } else if (event.key == ' ' && selected.values()[0]) {
-      view_center = selected.values()[0].position;
+    } else {
+      shortcut_description += event.key;
+      if (shortcut_map[shortcut_description]) shortcut_map[shortcut_description](event);
     }
   });
 
