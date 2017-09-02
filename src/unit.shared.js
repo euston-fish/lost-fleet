@@ -131,6 +131,12 @@ Unit.prototype.attack_target = function () {
   }
 }
 
+/// Helpers ///
+
+Unit.prototype.set_parent = function(parent_id) {
+  this.parent = this.arena.units[parent_id];
+}
+
 Unit.prototype.decrease_stats = function(amount) {
   [0,1,2].forEach((i) => this.stats[i] = clamp(this.stats[i] - amount));
   // FUCK YES THIS IS THE BEST JAVASCRIPT IS MY FAVORITE LANGUAGE EVA!!!!1111!!!
