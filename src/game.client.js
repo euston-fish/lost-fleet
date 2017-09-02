@@ -256,9 +256,11 @@ let start_game = (socket, on_finished) => {
       set: (val) => {
         slider.value = val / 10;
         entry.value = val / 10;
-      }
+      },
+      focussed: () => entry == document.activeElement || slider == document.activeElement
     });
   });
+  sliders.any_focussed = () => sliders.filter((slider) => slider.focussed()).length > 0;
 
   let create_button = el('create');
   create_button.onclick = () => {
@@ -359,7 +361,9 @@ let start_game = (socket, on_finished) => {
     } else if (event.key == 'c') {
       create_button.onclick();
     } else if (event.key == 'Delete' || event.key == 'Backspace') {
-      (event.shiftKey ? selected.values() : [selected.values()[0]]).forEach((unit) => command(unit.id, 'destroy'));
+      if (!sliders.any_focussed()) {
+        (event.shiftKey ? selected.values() : [selected.values()[0]]).forEach((unit) => command(unit.id, 'destroy'));
+      }
     } else if (event.key == ' ' && selected.values()[0]) {
       view_center = selected.values()[0].position;
     }
