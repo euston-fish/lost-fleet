@@ -41,7 +41,7 @@ Unit.prototype.serialize = function() {
 }
 
 Unit.prototype.receive = function(command, ...params) {
-  this[command](...params);
+  Unit.handlers[command].call(this, ...params);
 }
 
 Unit.prototype.tick = function() {
@@ -54,10 +54,6 @@ Unit.prototype.tick = function() {
 /// Properties ///
 //
 // These properties are based on the unit's stats
-
-Unit.prototype.color = function() {
-  return 'rgb(' + this.stats.map(Math.floor) + ')';
-}
 
 Unit.prototype.radius = function () {
   return mix((this.stats[0] + this.stats[1] + this.stats[2]) / 7650, 5, 17);
@@ -75,6 +71,14 @@ Unit.prototype.weapon_damage = function() {
   return this.stats[2] / 110;
 }
 
+Unit.prototype.mine_range = function() {
+  return 200;
+}
+
+Unit.prototype.mine_damage = function() {
+  return 50;
+}
+
 Unit.prototype.mine_efficiency = function() {
   return 0.9 * this.weapon_damage();
 }
@@ -83,33 +87,37 @@ Unit.prototype.mine_efficiency = function() {
 //
 // These are commands that the unit can receive
 
-Unit.prototype.add_waypoint = function(waypoint) {
+Unit.handlers = {}
+
+Unit.handlers.add_waypoint = function(waypoint) {
   // Add a new waypoint
   this.target_id = null;
   this.waypoints.push(waypoint);
 }
 
-Unit.prototype.clear_waypoints = function() {
+Unit.handlers.clear_waypoints = function() {
   // Clear the current queue of waypoints
   this.waypoints = [];
 }
 
-Unit.prototype.create = function(stats) {
+Unit.handlers.create = function(stats) {
   // Have a unit baby
   new Unit(this.arena, { owner_id: this.owner.id, position: add(this.position, [10, 10]), stats: stats});
 }
 
+Unit.handlers.set_target = function (id, type) {
+  this.target_id = id;
+  this.target_type = type;
+}
+
+/// Helpers ///
+//
 Unit.prototype.get_target = function() {
   if (this.target_type == 'unit') {
     return this.arena.units[this.target_id];
   } else if (this.target_type == 'asteroid' && this.target_id) {
     return this.arena.asteroid_field.asteroid(...this.target_id);
   }
-}
-
-Unit.prototype.set_target = function (id, type) {
-  this.target_id = id;
-  this.target_type = type;
 }
 
 Unit.prototype.attack_target = function () {
@@ -122,8 +130,6 @@ Unit.prototype.attack_target = function () {
     other.decrease_stats(this.weapon_damage());
   }
 }
-
-/// Helpers ///
 
 Unit.prototype.decrease_stats = function(amount) {
   [0,1,2].forEach((i) => this.stats[i] = clamp(this.stats[i] - amount));
