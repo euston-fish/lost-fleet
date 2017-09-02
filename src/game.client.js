@@ -80,7 +80,30 @@ let start_game = (socket, on_finished) => {
   Unit.prototype.draw = function() {
     let pos = game_to_screen(this.position);
     let other;
-    if (other = this.get_target()) {
+    if (this.command) {
+      if (this.command.type === 'attack') {
+        let target = this.arena.units[this.command.target_id];
+        if (target && this.laser) {
+          ctx.strokeStyle = 'rgb('+this.laser+')';
+          ctx.beginPath();
+          ctx.lineWidth = 4;
+          ctx.moveTo(...pos);
+          ctx.lineTo(...game_to_screen(target.position));
+          ctx.stroke();
+        }
+      } else if (this.command.type === 'mine') {
+        let target = this.arena.asteroid_field.asteroid(...this.command.target_id);
+        if (target && this.laser) {
+          ctx.strokeStyle = 'rgb('+this.laser+')';
+          ctx.beginPath();
+          ctx.lineWidth = 4;
+          ctx.moveTo(...pos);
+          ctx.lineTo(...game_to_screen(target.position));
+          ctx.stroke();
+        }
+      }
+    }
+    /*if (other = this.get_target()) {
       if (leng(sub(this.position, other.position)) < this.weapon_range()) {
         ctx.strokeStyle = this.owner.color;
         ctx.beginPath();
@@ -89,7 +112,7 @@ let start_game = (socket, on_finished) => {
         ctx.lineTo(...game_to_screen(other.position));
         ctx.stroke();
       }
-    }
+    }*/
     stroke_triangle(pos, this.radius(), this.rotation);
     ctx.fillStyle = this.owner.color;
     ctx.fill();
@@ -269,7 +292,8 @@ let start_game = (socket, on_finished) => {
       let subtracted = moi().subtracted_resources(cost);
       if (subtracted.filter((a) => a >= 0).length == subtracted.length) {
         moi().resources = subtracted;
-        command(selected.values()[0].id, 'create', cost);
+        //command(selected.values()[0].id, 'create', cost);
+        //TODO: re-implement creation
       }
     }
   };
@@ -329,15 +353,23 @@ let start_game = (socket, on_finished) => {
         .forEach((unit) => {
           if (target) {
             if (target_type == 'unit' && target.owner.id == me) {
-              command(unit.id, 'set_parent', target_id)
+              //command(unit.id, 'set_parent', target_id)
+              //TODO: reimplement this
             } else {
-              command(unit.id, 'set_target', target_id, target_type);
+              //command(unit.id, 'set_target', target_id, target_type);
+              //TODO: reimplement this
+              if (target_type == 'unit') {
+                command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
+              } else if (target_type == 'asteroid') {
+                command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
+              }
             }
           } else {
             if (!event.altKey) {
-              command(unit.id, 'clear_waypoints');
+              //command(unit.id, 'clear_waypoints');
             }
-            command(unit.id, 'add_waypoint', add(screen_to_game(cursor_location), offset));
+            //command(unit.id, 'add_waypoint', add(screen_to_game(cursor_location), offset));
+            command(unit.id, 'set_destination', add(screen_to_game(cursor_location), offset));
             offset = add(offset, [36, 0]);
           }
         });
@@ -365,7 +397,8 @@ let start_game = (socket, on_finished) => {
       create_button.onclick();
     } else if (event.key == 'Delete' || event.key == 'Backspace') {
       if (!sliders.any_focussed()) {
-        (event.shiftKey ? selected.values() : [selected.values()[0]]).forEach((unit) => command(unit.id, 'destroy'));
+        //(event.shiftKey ? selected.values() : [selected.values()[0]]).forEach((unit) => command(unit.id, 'destroy'));
+        //TODO: reimplement this
       }
     } else if (event.key == ' ' && selected.values()[0]) {
       view_center = selected.values()[0].position;

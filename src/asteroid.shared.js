@@ -115,10 +115,11 @@ Asteroid.prototype.point_in = function(point) {
 
 // Minable things
 
-Asteroid.prototype.decrease_stats = function(amount) {
-  [0,1,2].forEach((i) => this.stats[i] = clamp(this.stats[i] - amount));
-  // FUCK YES THIS IS THE BEST JAVASCRIPT IS MY FAVORITE LANGUAGE EVA!!!!1111!!!
+Asteroid.prototype.take_damage = function(mine_stats) {
+  let damage = zip(mine_stats, this.stats).map(([d, v]) => min(d, v));
+  this.stats = zip(this.stats, damage).map(([s, d]) => s-d);
   if (this.stats == '0,0,0') this.destroy();
+  return damage;
 }
 
 Asteroid.prototype.destroy = function() {
