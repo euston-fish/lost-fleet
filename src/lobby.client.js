@@ -1,3 +1,4 @@
+let el = (id) => document.getElementById(id);
 window.addEventListener("load", function() {
   let socket = io({ upgrade: false, transports: ["websocket"] });
   el('join').style.display = 'none';
