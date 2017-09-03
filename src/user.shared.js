@@ -26,7 +26,7 @@ User.prototype.subtracted_resources = function(costs) {
 User.prototype.centroid = function() {
   let sum = [0, 0];
   this.units.values().forEach((unit) => {
-    sum = add(sum, unit.position);
+    sum = add(sum, unit.pos);
   });
   return scale(sum, 1/this.units.values().length);
 }

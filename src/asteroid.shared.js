@@ -53,7 +53,7 @@ function Asteroid(field, { block: block,
   this.block = block;
   this.index = index;
   let rng = new RNG(field.x_coefficient*block[0] + field.y_coefficient*block[1] + field.i_coefficient*index);
-  this.position = [this.block[0]*this.field.block_size+mix(rng.random(), 0, field.block_size),
+  this.pos= [this.block[0]*this.field.block_size+mix(rng.random(), 0, field.block_size),
                    this.block[1]*this.field.block_size+mix(rng.random(), 0, field.block_size)];
   let emphasis = (this.block[0] + this.block[1]) % 3;
   this.stats = [0, 0, 0].map((_, idx) => mix(rng.random(), idx == emphasis ? 1400 : 0, idx == emphasis ? 2550 : 1800));
@@ -88,7 +88,7 @@ Asteroid.prototype.size = function() {
 
 Asteroid.prototype.shape = function() {
   return Asteroid.asteroid_shapes[this.shape_id]
-    .map((p) => add(this.position, rotate(scale(p, this.size()), this.rotation)));
+    .map((p) => add(this.pos, rotate(scale(p, this.size()), this.rotation)));
 }
 
 // point in polygon from http://geomalgorithms.com/a03-_inclusion.html
