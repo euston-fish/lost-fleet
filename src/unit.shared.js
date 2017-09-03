@@ -45,10 +45,6 @@ Unit.prototype.serialize = function() {
 }
 
 Unit.prototype.receive = function(command, ...params) {
-  this[command](...params);
-}
-
-Unit.prototype.tick = function() {
   Unit.handlers[command].call(this, ...params);
 }
 
@@ -100,7 +96,7 @@ Unit.prototype.mine_efficiency = function() {
 
 Unit.prototype.tick = function() {
   this.current_acceleration = this.acceleration();
-  this.velocity = add(this.velocity, this.current_acceleration());
+  this.velocity = add(this.velocity, this.current_acceleration);
   this.position = add(this.position, this.velocity);
   if(leng(this.velocity) > 0.01) this.rotation = scalar_angle(this.velocity);
   //this.attack_target();
