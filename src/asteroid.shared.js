@@ -55,8 +55,8 @@ function Asteroid(field, { block: block,
   let rng = new RNG(field.x_coefficient*block[0] + field.y_coefficient*block[1] + field.i_coefficient*index);
   this.pos= [this.block[0]*this.field.block_size+mix(rng.random(), 0, field.block_size),
                    this.block[1]*this.field.block_size+mix(rng.random(), 0, field.block_size)];
-  let emphasis = (this.block[0] + this.block[1]) % 3;
-  this.stats = [0, 0, 0].map((_, idx) => mix(rng.random(), idx == emphasis ? 1400 : 0, idx == emphasis ? 2550 : 1800));
+  let emphasis = (this.block[0] + this.block[1]) % 2;
+  this.stats = [0, 0].map((_, idx) => mix(rng.random(), idx == emphasis ? 1400 : 0, idx == emphasis ? 2550 : 1800));
   this.shape_id = Math.round(rng.random()*Asteroid.asteroid_shapes.length-0.5);
   this.rotation = rng.random()*2*Math.PI;
 }
@@ -118,7 +118,7 @@ Asteroid.prototype.point_in = function(point) {
 Asteroid.prototype.take_damage = function(mine_stats) {
   let damage = zip(mine_stats, this.stats).map(([d, v]) => min(d, v));
   this.stats = zip(this.stats, damage).map(([s, d]) => s-d);
-  if (this.stats == '0,0,0') this.destroy();
+  if (this.stats == '0,0') this.destroy();
   return damage;
 }
 

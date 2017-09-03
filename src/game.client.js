@@ -184,7 +184,8 @@ let start_game = (socket, on_finished) => {
     this.shape().forEach((pos) => ctx.lineTo(...game_to_screen(pos)))
     ctx.closePath();
     let shade = Math.floor(this.stats.reduce(nums.add, 0) / 30);
-    let color = this.stats.map((num) => Math.floor(num / 10));
+    //let color = this.stats.map((num) => Math.floor(num / 10));
+    let color = '#ddd'; // TODO: asteroid color depending on alpha and beta
     ctx.fillStyle = 'rgb(' + [shade, shade, shade] + ')';
     ctx.strokeStyle = 'rgb(' + color + ')';
     ctx.lineWidth = 3;
@@ -383,12 +384,12 @@ let start_game = (socket, on_finished) => {
                   //alert('hold full');
                 //});
                 unit.events.out_of_range.register(() => {
-                  command(unit.id, 'set_destination', add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.attack_range())));
+                  command(unit.id, 'set_destination', add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.stats.Attack.Rn)));
                 });
               } else if (target_type == 'asteroid') {
                 command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
                 unit.events.out_of_range.register(() => {
-                  command(unit.id, 'set_destination', add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.mine_range())));
+                  command(unit.id, 'set_destination', add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.stats.Mine.Rn)));
                 });
               }
             }
@@ -450,6 +451,7 @@ let start_game = (socket, on_finished) => {
   });
 
   socket.on('connected', (arena_, me_) => {
+    console.log(arena_);
     arena = new Arena(arena_);
     me = me_;
     view_center = moi().centroid();

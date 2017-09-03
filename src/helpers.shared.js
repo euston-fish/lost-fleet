@@ -73,3 +73,7 @@ RNG.prototype.random_int = function() {
 Object.prototype.values = function() {
   return Object.values(this);
 }
+
+Array.prototype.sum = function() {
+  return this.reduce(nums.add);
+}

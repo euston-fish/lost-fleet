@@ -5,20 +5,23 @@
 function Unit(arena, { id: id,
                 owner_id: owner_id,
                 pos: pos,
-                vel: vel,
                 stats: stats,
-                hold: hold }) {
+                health: health }) {
   this.arena = arena;
   this.id = (id !== undefined) ? id : arena.id_counter++;
   this.owner = arena.users[owner_id];
-  this.pos = pos;
-  this.shape_id = 1;
   this.owner.units[this.id] = this;
   arena.units[this.id] = this;
-  this.stats = stats || [128, 128, 128];
-  this.hold = hold || [0, 0, 0];
-  this.vel = vel || [0, 0];
+  this.pos = pos;
+  this.stats = stats;
+
+  this.vel = [0, 0];
+  this.hold = [0, 0];
+  this.health = health || [0, 0];
+  this.activated = false;
+
   this.command = null;
+  this.shape_id = 1;
   this.rotation = scalar_angle(this.vel);
 
   this.events = {
@@ -39,9 +42,8 @@ Unit.prototype.serialize = function() {
     id: this.id,
     owner_id: this.owner.id,
     pos: this.pos,
-    vel: this.vel,
     stats: this.stats,
-    hold: this.hold
+    health: this.health
   };
 }
 
@@ -54,7 +56,8 @@ Unit.prototype.receive = function(command, ...params) {
 // These properties are based on the unit's stats
 
 Unit.prototype.radius = function () {
-  return mix((this.stats[0] + this.stats[1] + this.stats[2]) / 7650, 10, 24);
+  // TODO: make less powerful units smaller?
+  return mix(leng(this.health)/leng(this.stats.cost), 8, 15);
 }
 
 Unit.prototype.max_acceleration = function() {
@@ -112,8 +115,8 @@ Unit.tick_handlers.attack = function({ target_id: target_id }) {
     this.events.no_target.call();
     return;
   }
-  if (leng(sub(this.pos, target.pos)) < this.attack_range()) {
-    this.laser = this.receive_attack_resources(target.take_damage(this.attack_stats()));
+  if (leng(sub(this.pos, target.pos)) < this.stats.Attack.Rn) {
+    this.laser = this.receive_attack_resources(target.take_damage(this.stats.Attack.Pw));
   } else {
     this.events.out_of_range.call();
     this.laser = null;
@@ -126,8 +129,8 @@ Unit.tick_handlers.mine = function({ target_id: target_id }) {
     this.events.no_target.call();
     return;
   }
-  if (leng(sub(this.pos, target.pos)) < this.mine_range()) {
-    this.laser = this.receive_mine_resources(target.take_damage(this.mine_stats()));
+  if (leng(sub(this.pos, target.pos)) < this.stats.Mine.Rn) {
+    this.laser = this.receive_mine_resources(target.take_damage(this.stats.Mine.Pw));
   } else {
     this.events.out_of_range.call();
     this.laser = null;
@@ -155,38 +158,39 @@ Unit.prototype.set_parent = function(parent_id) {
 }
 
 Unit.prototype.acceleration = function() {
+  let max_accel = this.stats.Misc.Ac;
   if(this.destination) {
     let target = this.destination;
     let dir_vec = add(target, inv(this.pos));
-    let target_vel = scale(norm(dir_vec), this.max_acceleration() * (Math.sqrt(1+8*leng(dir_vec)/this.max_acceleration())-1)/2);
-    if(Math.abs(dir_vec[0]) < EPSILON && Math.abs(dir_vec[1]) < EPSILON && leng(this.vel) < this.max_acceleration()) {
+    let target_vel = scale(norm(dir_vec), max_accel * (Math.sqrt(1+8*leng(dir_vec)/max_accel)-1)/2);
+    if(Math.abs(dir_vec[0]) < EPSILON && Math.abs(dir_vec[1]) < EPSILON && leng(this.vel) < max_accel) {
       this.destination = null;
       target_vel = [0, 0];
     }
     
     let d_accel = add(target_vel, inv(this.vel));
-    return scale(norm(d_accel), Math.min(this.max_acceleration(), leng(d_accel)));
+    return scale(norm(d_accel), Math.min(max_accel, leng(d_accel)));
   } else {
     // Accelerate so that velocity becomes zero
-    return scale(norm(inv(this.vel)), Math.min(this.max_acceleration(), leng(this.vel)));
+    return scale(norm(inv(this.vel)), Math.min(max_accel, leng(this.vel)));
   }
 }
 
 Unit.prototype.take_damage = function(attack_stats) {
-  let damage = zip(dot(attack_stats, this.defence()), this.stats).map(([d, v]) => min(d, v));
-  this.stats = zip(this.stats, damage).map(([s, d]) => s-d);
-  if(this.stats == '0,0,0') this.destroy();
+  let damage = zip(dot(attack_stats, this.stats.Misc.De.map((d) => 1-d)), this.health).map(([d, v]) => min(d, v));
+  this.health = zip(this.health, damage).map(([s, d]) => s-d);
+  if(this.health == '0,0') this.destroy();
   return damage;
 }
 
 Unit.prototype.receive_attack_resources = function(resources) {
-  this.hold = zip(this.hold, dot(resources, this.attack_efficiency()), this.hold_capacity()).map(([h, r, c]) => min(h+r, c))
-  if (this.hold + '' === this.hold_capacity() + '') this.events.hold_full.call();
-  return dot(resources, this.attack_efficiency());
+  this.hold = zip(this.hold, dot(resources, this.stats.Attack.Ef), this.stats.Misc.Cp).map(([h, r, c]) => min(h+r, c))
+  if (this.hold + '' === this.stats.Misc.Cp + '') this.events.hold_full.call();
+  return dot(resources, this.stats.Attack.Ef);
 }
 
 Unit.prototype.receive_mine_resources = function(resources) {
-  this.hold = zip(this.hold, dot(resources, this.mine_efficiency()), this.hold_capacity()).map(([h, r, c]) => min(h+r, c))
-  if (this.hold + '' === this.hold_capacity() + '') this.events.hold_full.call();
-  return dot(resources, this.mine_efficiency());
+  this.hold = zip(this.hold, dot(resources, this.stats.Mine.Ef), this.stats.Misc.Cp).map(([h, r, c]) => min(h+r, c))
+  if (this.hold + '' === this.stats.Misc.Cp + '') this.events.hold_full.call();
+  return dot(resources, this.stats.Mine.Ef);
 }

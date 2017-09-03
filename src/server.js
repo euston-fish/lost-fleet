@@ -21,6 +21,31 @@
     // If there are enough people waiting, start a game
     if (waiting.length >= 2) {
       console.log('starting game...'); 
+
+      let mothership_stats = new Stats({
+        Attack: {
+          Rn: [0.7, 0.7],
+          Pw: [0.7, 0.7],
+          Ef: [0.7, 0.7]
+        },
+        Mine: {
+          Rn: [0.7, 0.7],
+          Pw: [0.7, 0.7],
+          Ef: [0.7, 0.7]
+        },
+        Construct: {
+          Rn: [0.7, 0.7],
+          Pw: [0.7, 0.7],
+          Ef: [0.7, 0.7]
+        },
+        Misc: {
+          Ac: [0.7, 0.7],
+          De: [0.7, 0.7],
+          Cp: [0.7, 0.7],
+          Tr: [0.7, 0.7]
+        }
+      });
+      console.log(mothership_stats);
       
       let arena = new Arena({
         users: waiting.map((client, i) => {
@@ -30,7 +55,7 @@
             id: client.id,
             color: random_color(),
             units: [
-              { pos: pos, vel: [0, 0], stats: [2550, 2550, 2550] }
+              { pos: pos, vel: [0, 0], stats: mothership_stats, health: mothership_stats.cost }
             ]
           }
         }),

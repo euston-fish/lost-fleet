@@ -56,7 +56,7 @@ function create_pickers(attributes, group_order) {
     result.pickers.forEach((picker) => {
       res[picker.group][picker.attr.short] = picker.get_val();
     });
-    return res;
+    return new Stats(res);
   };
   return result;
 }
