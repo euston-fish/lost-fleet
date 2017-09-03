@@ -411,7 +411,15 @@ let start_game = (socket, on_finished) => {
     q: () => selected = {},
     c: create_button.onclick,
     // TODO: reimplement deletion
-    " ": () =>  { if (selected.values()[0]) view_center = selected.values()[0].pos; }
+    " ": () =>  { if (selected.values()[0]) view_center = selected.values()[0].pos; },
+    Tab: (event) => {
+      event.preventDefault();
+      pickers.select_in_n(1)();
+    },
+    "S-Tab": (event) => {
+      event.preventDefault();
+      pickers.select_in_n(-1)();
+    }
   };
 
   add_event_listener(w, 'keydown', (event) => {
