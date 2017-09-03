@@ -31,15 +31,15 @@ let start_game = (socket, on_finished) => {
     return add(sub(screen_pos, center), vc);
   };
 
-  {
-    let old_introduce_user = Arena.handlers.introduce_user;
-    Arena.handlers.introduce_user = function(user) {
-      old_introduce_user.call(this, user);
-      if(user.id === me) {
-        view_center = moi().centroid();
-      }
-    }
-  }
+  //{
+    //let old_introduce_user = Arena.handlers.introduce_user;
+    //Arena.handlers.introduce_user = function(user) {
+      //old_introduce_user.call(this, user);
+      //if(user.id === me) {
+        //view_center = moi().centroid();
+      //}
+    //}
+  //}
 
   {
     let old_destroy = Unit.prototype.destroy;
@@ -427,6 +427,7 @@ let start_game = (socket, on_finished) => {
   socket.on('connected', (arena_, me_) => {
     arena = new Arena(arena_);
     me = me_;
+    view_center = moi().centroid();
     console.log('connected', arena, me);
   });
 

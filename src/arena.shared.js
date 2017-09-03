@@ -26,10 +26,10 @@ Arena.prototype.receive = function([command, ...params]) {
 }
 
 Arena.handlers = {}
-Arena.handlers.introduce_user = function(user) {
-  console.log('introduce user', user);
-  new User(this, user);
-}
+//Arena.handlers.introduce_user = function(user) {
+  //console.log('introduce user', user);
+  //new User(this, user);
+//}
 
 Arena.handlers.command_unit = function(id, ...params) {
   if(this.units[id]) this.units[id].receive(...params);
