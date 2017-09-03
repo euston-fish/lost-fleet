@@ -6,20 +6,26 @@
 <style>
 body {
   cursor: default;
+  margin: 0;
+  background-color: #07002B;
+  user-select: none;
 }
 #picker > div {
   width: 1em;
   height: 1em;
-  border-top: 1px solid black;
-  border-left: 1px solid black;
-  user-select: none;
-  background: #DDD;
+  border-top: 1px solid #eee;
+  border-left: 1px solid #eee;
+  background: #312769;
+  padding: 3px;
 }
 .selected {
-  border: 2px solid green;
+  color: #57BEFF;
 }
-.deselected {
-  border: 2px solid grey;
+#picker {
+  margin-bottom: 10px;
+}
+#picker .selected {
+  cursor: none;
 }
 
 canvas {
@@ -28,27 +34,44 @@ canvas {
   width: 100%;
   height: 100%;
 }
+#info {
+  background-color: #312769;
+  padding: 5px;
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+  width: 20em;
+  font-family: monospace;
+  color: #eee;
+}
+#create {
+  color: #57BEFF;
+  border: 2px solid #57BEFF;
+  text-align: center;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  margin-top: 5px;
+}
+#create:active {
+  color: #278DCC;
+  border-color: #278DCC;
+}
 </style>
   </head>
-  <body style="margin: 0; background-color: #07002B;" id="q">
-    <div id="join">
-      <input type="text"></input>
-    </div>
-
+  <body id="q">
+    <div id="join"> <input type="text"></input> </div>
     <div id="game" style="display: none">
       <canvas id="far_stars"></canvas>
       <canvas id="mid_stars"></canvas>
       <canvas id="near_stars"></canvas>
       <canvas id="c"></canvas>
-      <div style="background-color: #DDD; padding: 5px; position: absolute; right: 1em; bottom: 1em; width: 15em; font-family: monospace;" id="info">
-        <div id="picker" style="width:100%;height:15em"></div>
+      <div id="info">
+        <div id="picker" style="width:100%;height:20em"></div>
         <div id="groups"></div>
-        <div id="structure-opts">
-          <div id="resources">255,255,255</div>
-          <button id="create">Create</button>
-          <div id="selected">
-          </div>
-        </div>
+        <div id="resources">255,255,255</div>
+        <button id="create">Create</button>
+        <div id="selected"> </div>
       </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
