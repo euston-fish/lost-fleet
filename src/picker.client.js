@@ -8,30 +8,30 @@ function create_pickers(attributes, group_order) {
     let elem = document.createElement('span');
     elem.innerText = group;
     elem.id = group;
-    if (group == group_order[0]) elem.className = 'selected';
+    elem.className = group == group_order[0] ? 'selected' : 'deselected';
     elem.onclick = () => result.pickers.forEach((picker) => {
-      picker.style.display = picker.attr.group == group ? 'block' : 'none';
+      picker.style.display = picker.group == group ? 'block' : 'none';
       group_order.forEach((gr_name) => {
-        document.getElementById(gr_name).className = gr_name == group ? 'selected' : '';
+        document.getElementById(gr_name).className = gr_name == group ? 'selected' : 'deselected';
       });
     });
     groups_container.appendChild(elem);
-  });
-
-  attributes.forEach((attr) => {
-    let picker = document.createElement('div');
-    picker.style.position = 'absolute';
-    picker.style.top = 0;
-    picker.style.left = 0;
-    picker.innerText = attr.short;
-    picker.title = attr.title;
-    picker.attr = attr;
-    picker.addEventListener('mousedown', (event) => {
-      current_picker = picker;
+    attributes[group].forEach((attr) => {
+      let picker = document.createElement('div');
+      picker.group = group;
+      picker.style.position = 'absolute';
+      picker.style.top = attr.default_x || 0;
+      picker.style.left = attr.default_y || 0;
+      picker.innerText = attr.short;
+      picker.title = attr.title;
+      picker.attr = attr;
+      picker.addEventListener('mousedown', (event) => {
+        current_picker = picker;
+      });
+      container.appendChild(picker);
+      result.pickers.push(picker);
+      picker.style.display = picker.group == group_order[0] ? 'block' : 'none';
     });
-    container.appendChild(picker);
-    result.pickers.push(picker);
-    picker.style.display = attr.group == group_order[0] ? 'block' : 'none';
   });
 
   container.addEventListener('mousemove', (event) => {
@@ -49,20 +49,41 @@ function create_pickers(attributes, group_order) {
   return result;
 }
 
-create_pickers([
-  {
-    short: 'Pw',
-    title: 'Power',
-    group: 'Things'
-  },
-  {
-    short: 'De',
-    title: 'Defense',
-    group: 'Stuff'
-  },
-  {
-    short: 'Rn',
-    title: 'Range',
-    group: 'Things'
-  }
-], ['Things', 'Stuff'])
+let attrs = [
+    {
+      short: 'Rn',
+      title: 'Range'
+    },
+    {
+      short: 'Pw',
+      title: 'Power'
+    },
+    {
+      short: 'Ef',
+      title: 'Efficiency'
+    }
+  ];
+
+create_pickers({
+  Attack: attrs,
+  Mine: attrs,
+  Construct: attrs,
+  Misc: [
+    {
+      short: 'Ac',
+      title: 'Acceleration'
+    },
+    {
+      short: 'De',
+      title: 'Defence'
+    },
+    {
+      short: 'Cp',
+      title: 'Capacity'
+    },
+    {
+      short: 'Tr',
+      title: 'Transfer'
+    }
+  ]
+}, ['Attack', 'Mine', 'Construct', 'Misc']);
