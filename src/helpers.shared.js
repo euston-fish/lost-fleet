@@ -12,7 +12,7 @@ let
     let l = leng(a);
     return (l !== 0) ? scale(a, 1/l) : [0, 0];
   },
-  clamp = (val) => Math.max(0, val),
+  clamp = (val, min, max) => max === undefined ? Math.max(min || 0, val) : Math.min(max, Math.max(min || 0, val)),
   mix = (val, min, max) => min + (max - min) * val,
   normal = (uniform_1, uniform_2) => Math.sqrt(-2 * Math.log(uniform_1)) * Math.cos(2 * Math.PI * uniform_2), // Using Box-Muller
   towards = (from, to, inc) => from < to ? min(from + inc, to) : max(to, from - inc),
