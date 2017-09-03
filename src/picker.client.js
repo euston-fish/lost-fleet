@@ -28,6 +28,9 @@ function create_pickers(attributes, group_order) {
       picker.addEventListener('mousedown', (event) => {
         current_picker = picker;
       });
+      picker.get_val = () => [
+        picker.offsetLeft / (container.offsetWidth - 10), picker.offsetTop / (container.offsetHeight - 10)
+      ];
       container.appendChild(picker);
       result.pickers.push(picker);
       picker.style.display = picker.group == group_order[0] ? 'block' : 'none';
@@ -40,11 +43,20 @@ function create_pickers(attributes, group_order) {
       let y = clamp(event.clientY - container.parentElement.offsetTop - (current_picker.offsetHeight / 2), 0, container.offsetHeight - 10);
       current_picker.style.top = y + 'px';
       current_picker.style.left = x + 'px';
-      result.onchange(current_picker.attr, x / (container.offsetWidth - 10), y / (container.offsetHeight - 10));
+      result.onchange(current_picker.group, current_picker.attr.short, current_picker.get_val());
     }
   });
   container.addEventListener('mouseup', () => {
     current_picker = null;
   });
+
+  result.to_object = () => {
+    let res = {};
+    group_order.forEach((group) => { res[group] = {} })
+    result.pickers.forEach((picker) => {
+      res[picker.group][picker.attr.short] = picker.get_val();
+    });
+    return res;
+  };
   return result;
 }

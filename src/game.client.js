@@ -33,7 +33,7 @@ let start_game = (socket, on_finished) => {
 
   let attrs = [ { short: 'Rn', title: 'Range' }, { short: 'Pw', title: 'Power' },
     { short: 'Ef', title: 'Efficiency' } ]; 
-  create_pickers({ Attack: attrs, Mine: attrs, Construct: attrs, Misc: [
+  let pickers = create_pickers({ Attack: attrs, Mine: attrs, Construct: attrs, Misc: [
       { short: 'Ac', title: 'Acceleration' },
       { short: 'De', title: 'Defence' },
       { short: 'Cp', title: 'Capacity' },
