@@ -65,38 +65,101 @@ let start_game = (socket, on_finished) => {
     this.arc(...pos, radius, 0, Math.PI * 2);
   }
 
-  let stroke_triangle = ([x, y], size, rotation) => {
+  let scale_path = (rate, ...path) => path.map(([x, y]) => [rate * x, rate * y]);
+  let let_path = (...args) => (func) => func(...args);
+
+  let ship_shapes = [
+    (unit) => [{
+      body: {
+        fillStyle: unit.owner.color,
+        strokeStyle: selected[unit.id] ? 'orange' : 'grey',
+        lineWidth: 3,
+        paths: [scale_path(unit.radius(), [0, -1], [1, 1], [-1, 1])]
+      },
+      flames: {
+        fillStyle: 'orange',
+        paths: [
+          let_path(unit.radius(),
+            leng(unit.current_acceleration || [0,0]) * 7
+          )((r, s) => [[0, r + s], [r / 2, r], [-r / 2, r]])
+        ]
+      }
+    }],
+    (unit) => [{
+      body: {
+        fillStyle: unit.owner.color,
+        strokeStyle: selected[unit.id] ? 'orange' : 'grey',
+        lineWidth: 3,
+        paths: [scale_path(unit.radius(), [0, -1], [1, 1], [-1, 1])]
+      },
+      flames: {
+        fillStyle: 'orange',
+        paths: let_path(unit.radius(), leng(unit.current_acceleration || [0,0]) * 7)(
+          (r, s) => [
+            [[3, r], [3 + r / 2, r + s], [r - 3, r]],
+            [[-3, r], [-r / 2 - 3, r + s], [-r + 3, r]]
+          ]
+        )
+      }
+    }]
+  ]
+
+  // Draw base of ship, below any lasers
+  Unit.prototype.draw_lower = function() {
+    let ship_shape = ship_shapes[this.shape_id](this)[0];
+    ['flames', 'body'].forEach((component) => {
+      let info = ship_shape[component];
+      // Exit early if no info for component
+      if (!info) return;
+      ctx.beginPath();
+      info.paths.forEach((path) => {
+        ctx.moveTo(...path.shift());
+        path.forEach((pos) => ctx.lineTo(...pos));
+        ctx.closePath();
+      })
+      ctx.fillStyle = info.fillStyle;
+      ctx.strokeStyle = info.strokeStyle;
+      ctx.lineWidth = info.lineWidth;
+      if (info.fillStyle) ctx.fill();
+      if (info.strokeStyle) ctx.stroke();
+    })
+  }
+
+  // Stuff that is above the lasers
+  Unit.prototype.draw_upper = function() {
     ctx.beginPath();
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rotation);
-    ctx.moveTo(0, -size);
-    ctx.lineTo(size, size);
-    ctx.lineTo(-size, size);
-    ctx.restore();
+    ctx.circle([0,0], 5);
     ctx.closePath();
+    ctx.fillStyle = 'black';
+    ctx.fill();
   }
 
   Unit.prototype.draw = function() {
+    let size = this.radius();
     let pos = game_to_screen(this.position);
+    ctx.save();
+    ctx.translate(...pos);
+    ctx.rotate(this.rotation);
+    this.draw_lower();
     let other;
     if (other = this.get_target()) {
       if (leng(sub(this.position, other.position)) < this.weapon_range()) {
-        ctx.strokeStyle = this.owner.color;
+        ctx.restore();
+        ctx.strokeStyle = '#FFC014';
         ctx.beginPath();
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 2;
         ctx.moveTo(...pos);
         ctx.lineTo(...game_to_screen(other.position));
         ctx.stroke();
+        // Move back to translated pos
+        ctx.save();
+        ctx.translate(...pos);
+        ctx.rotate(this.rotation);
       }
     }
-    stroke_triangle(pos, this.radius(), this.rotation);
-    ctx.fillStyle = this.owner.color;
-    ctx.fill();
-    stroke_triangle(pos, this.radius(), this.rotation);
-    ctx.strokeStyle = selected[this.id] ? 'orange' : 'grey';
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    this.draw_upper();
+    ctx.restore();
+
     resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
   }
 

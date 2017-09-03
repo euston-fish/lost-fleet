@@ -16,6 +16,7 @@ function Unit(arena, { id: id,
   this.position = position;
   this.target_type = target_type;
   this.target_id = target_id;
+  this.shape_id = 1;
   this.owner.units[this.id] = this;
   arena.units[this.id] = this;
   this.stats = stats || [128, 128, 128];
@@ -45,7 +46,8 @@ Unit.prototype.receive = function(command, ...params) {
 }
 
 Unit.prototype.tick = function() {
-  this.velocity = add(this.velocity, this.acceleration());
+  this.current_acceleration = this.acceleration();
+  this.velocity = add(this.velocity, this.current_acceleration);
   this.position = add(this.position, this.velocity);
   if(leng(this.velocity) > 1) this.rotation = scalar_angle(this.velocity);
   this.attack_target();
@@ -60,7 +62,7 @@ Unit.prototype.color = function() {
 }
 
 Unit.prototype.radius = function () {
-  return mix((this.stats[0] + this.stats[1] + this.stats[2]) / 7650, 5, 17);
+  return mix((this.stats[0] + this.stats[1] + this.stats[2]) / 7650, 10, 24);
 }
 
 Unit.prototype.max_acceleration = function() {
