@@ -20,8 +20,8 @@ function create_pickers(attributes, group_order) {
       let picker = document.createElement('div');
       picker.group = group;
       picker.style.position = 'absolute';
-      picker.style.top = attr.default_x || 0;
-      picker.style.left = attr.default_y || 0;
+      picker.style.top = Math.random() * (container.offsetHeight - 10) + 'px';
+      picker.style.left = Math.random() * (container.offsetWidth - 10) + 'px';
       picker.innerText = attr.short;
       picker.title = attr.title;
       picker.attr = attr;
@@ -40,7 +40,7 @@ function create_pickers(attributes, group_order) {
       let y = clamp(event.clientY - container.parentElement.offsetTop - (current_picker.offsetHeight / 2), 0, container.offsetHeight - 10);
       current_picker.style.top = y + 'px';
       current_picker.style.left = x + 'px';
-      result.onchange(current_picker.attr, x, y);
+      result.onchange(current_picker.attr, x / (container.offsetWidth - 10), y / (container.offsetHeight - 10));
     }
   });
   container.addEventListener('mouseup', () => {
@@ -48,42 +48,3 @@ function create_pickers(attributes, group_order) {
   });
   return result;
 }
-
-let attrs = [
-    {
-      short: 'Rn',
-      title: 'Range'
-    },
-    {
-      short: 'Pw',
-      title: 'Power'
-    },
-    {
-      short: 'Ef',
-      title: 'Efficiency'
-    }
-  ];
-
-create_pickers({
-  Attack: attrs,
-  Mine: attrs,
-  Construct: attrs,
-  Misc: [
-    {
-      short: 'Ac',
-      title: 'Acceleration'
-    },
-    {
-      short: 'De',
-      title: 'Defence'
-    },
-    {
-      short: 'Cp',
-      title: 'Capacity'
-    },
-    {
-      short: 'Tr',
-      title: 'Transfer'
-    }
-  ]
-}, ['Attack', 'Mine', 'Construct', 'Misc']);

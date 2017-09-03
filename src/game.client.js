@@ -1,7 +1,6 @@
 let start_game = (socket, on_finished) => {
   let me, mothership, cursor_location, selected = {};
   let selection_groups = {};
-  let sliders = [];
   let arena;
   let view_center = [0, 0];
   let moi = () => arena.users[me];
@@ -31,15 +30,15 @@ let start_game = (socket, on_finished) => {
     return add(sub(screen_pos, center), vc);
   };
 
-  //{
-    //let old_introduce_user = Arena.handlers.introduce_user;
-    //Arena.handlers.introduce_user = function(user) {
-      //old_introduce_user.call(this, user);
-      //if(user.id === me) {
-        //view_center = moi().centroid();
-      //}
-    //}
-  //}
+
+  let attrs = [ { short: 'Rn', title: 'Range' }, { short: 'Pw', title: 'Power' },
+    { short: 'Ef', title: 'Efficiency' } ]; 
+  create_pickers({ Attack: attrs, Mine: attrs, Construct: attrs, Misc: [
+      { short: 'Ac', title: 'Acceleration' },
+      { short: 'De', title: 'Defence' },
+      { short: 'Cp', title: 'Capacity' },
+      { short: 'Tr', title: 'Transfer' } ]
+  }, ['Attack', 'Mine', 'Construct', 'Misc']);
 
   {
     let old_destroy = Unit.prototype.destroy;
@@ -310,43 +309,10 @@ let start_game = (socket, on_finished) => {
   let command = (...args) => socket.emit('command', args)
   socket.on('tick', handle_tick);
 
-  let make = (container, ...types) => {
-    let res = types.map((type) => document.createElement(type));
-    res.forEach((elem) => container.appendChild(elem));
-    return res;
-  }
-  [0, 1, 2].forEach((idx) => {
-    let [slider, entry, _] = make(el('sliders'), "input", "input", "br");
-    slider.type = 'range';
-    slider.style.width = '10em';
-    slider.max = 255;
-    slider.value = 10;
-    entry.value = 10;
-    entry.style.width = '5em';
-    entry.type = 'number';
-    slider.onchange = () => entry.value = slider.value;
-    entry.onchange = () => slider.value = max(0, min(entry.value, 255));
-    sliders.push({
-      get: () => slider.value * 10,
-      set: (val) => {
-        slider.value = val / 10;
-        entry.value = val / 10;
-      },
-      focussed: () => entry == document.activeElement || slider == document.activeElement
-    });
-  });
-  sliders.any_focussed = () => sliders.filter((slider) => slider.focussed()).length > 0;
-
   let create_button = el('create');
   create_button.onclick = () => {
     if (selected.values()[0]) {
-      let cost = sliders.map((slider) => slider.get());
-      let subtracted = moi().subtracted_resources(cost);
-      if (subtracted.filter((a) => a >= 0).length == subtracted.length) {
-        moi().resources = subtracted;
-        //command(selected.values()[0].id, 'create', cost);
-        //TODO: re-implement creation
-      }
+      // TODO Re-implement this
     }
   };
 
@@ -430,14 +396,11 @@ let start_game = (socket, on_finished) => {
 
   add_event_listener(canvas, 'mouseup', (event) => ui_state = { mode: 'NONE' });
 
-  //let delete_fun = () => !sliders.any_focussed() && (event.shiftKey ? selected.values() : [selected.values()[0]]).forEach((unit) => command(unit.id, 'destroy'));
   let shortcut_map = {
     e: () => selected = Object.assign({}, arena.users[me].units),
     q: () => selected = {},
     c: create_button.onclick,
-    //Delete: delete_fun,
-    //Backspace: delete_fun,
-    // TODO: reimplement deletion
+    // TODO Re-implement deletion
     " ": () =>  { if (selected.values()[0]) view_center = selected.values()[0].position; }
   };
 
