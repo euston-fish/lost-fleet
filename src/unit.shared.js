@@ -60,7 +60,7 @@ Unit.prototype.max_acceleration = function() {
   return (this.stats[0] + 1) / 500.0;
 }
 
-Unit.prototype.weapon_range = function() {
+Unit.prototype.attack_range = function() {
   return this.stats[1] / 3;
 }
 
