@@ -143,6 +143,7 @@ let start_game = (socket, on_finished) => {
     this.draw_lower();
     let other;
     if (this.command) {
+      ctx.restore();
       if (this.command.type === 'attack') {
         let target = this.arena.units[this.command.target_id];
         if (target && this.laser) {
@@ -164,6 +165,9 @@ let start_game = (socket, on_finished) => {
           ctx.stroke();
         }
       }
+      ctx.save();
+      ctx.translate(...pos);
+      ctx.rotate(this.rotation);
     }
     this.draw_upper();
     ctx.restore();
