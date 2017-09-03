@@ -30,7 +30,7 @@
             id: client.id,
             color: random_color(),
             units: [
-              { position: pos, velocity: [0, 0], stats: [2550, 2550, 2550] }
+              { pos: pos, vel: [0, 0], stats: [2550, 2550, 2550] }
             ]
           }
         }),

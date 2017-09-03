@@ -136,7 +136,7 @@ let start_game = (socket, on_finished) => {
 
   Unit.prototype.draw = function() {
     let size = this.radius();
-    let pos = game_to_screen(this.position);
+    let pos = game_to_screen(this.pos);
     ctx.save();
     ctx.translate(...pos);
     ctx.rotate(this.rotation);
@@ -151,7 +151,7 @@ let start_game = (socket, on_finished) => {
           ctx.beginPath();
           ctx.lineWidth = 2;
           ctx.moveTo(...pos);
-          ctx.lineTo(...game_to_screen(target.position));
+          ctx.lineTo(...game_to_screen(target.pos));
           ctx.stroke();
         }
       } else if (this.command.type === 'mine') {
@@ -161,7 +161,7 @@ let start_game = (socket, on_finished) => {
           ctx.beginPath();
           ctx.lineWidth = 4;
           ctx.moveTo(...pos);
-          ctx.lineTo(...game_to_screen(target.position));
+          ctx.lineTo(...game_to_screen(target.pos));
           ctx.stroke();
         }
       }
@@ -172,7 +172,8 @@ let start_game = (socket, on_finished) => {
     this.draw_upper();
     ctx.restore();
 
-    resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
+    //resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
+    resource_display.innerText = this.hold;
   }
 
   Asteroid.prototype.draw = function() {
@@ -376,7 +377,7 @@ let start_game = (socket, on_finished) => {
       // Take all of our units
       (moi() ? moi().units.values() : [])
         // Filter to just the ones in the rounded rectangle specified by the cursor location and selection origin
-        .filter((unit) => in_rounded_rectangle(unit.position, unit.radius(), screen_to_game(cursor_location), screen_to_game(ui_state.origin)))
+        .filter((unit) => in_rounded_rectangle(unit.pos, unit.radius(), screen_to_game(cursor_location), screen_to_game(ui_state.origin)))
         // Put each of these units into the selected set
         .forEach((unit) => selected[unit.id] = unit);
     } else if (event.button === 2) {
@@ -385,7 +386,7 @@ let start_game = (socket, on_finished) => {
       let target_type = 'unit';
       let target = arena.units.values()
         .find((unit) =>
-          in_rounded_rectangle(unit.position, unit.radius(), game_cursor)
+          in_rounded_rectangle(unit.pos, unit.radius(), game_cursor)
         );
       if (target) {
         target_id = target.id;
@@ -412,8 +413,17 @@ let start_game = (socket, on_finished) => {
               //TODO: reimplement this
               if (target_type == 'unit') {
                 command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
+                //unit.events.hold_full.register(() => {
+                  //alert('hold full');
+                //});
+                unit.events.out_of_range.register(() => {
+                  command(unit.id, 'set_destination', add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.attack_range())));
+                });
               } else if (target_type == 'asteroid') {
                 command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
+                unit.events.out_of_range.register(() => {
+                  command(unit.id, 'set_destination', add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.mine_range())));
+                });
               }
             }
           } else {
@@ -438,7 +448,7 @@ let start_game = (socket, on_finished) => {
     //Delete: delete_fun,
     //Backspace: delete_fun,
     // TODO: reimplement deletion
-    " ": () =>  { if (selected.values()[0]) view_center = selected.values()[0].position; }
+    " ": () =>  { if (selected.values()[0]) view_center = selected.values()[0].pos; }
   };
 
   add_event_listener(w, 'keydown', (event) => {

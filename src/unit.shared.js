@@ -4,27 +4,28 @@
 
 function Unit(arena, { id: id,
                 owner_id: owner_id,
-                position: position,
+                pos: pos,
+                vel: vel,
                 stats: stats,
-                target_id: target_id,
-                target_type: target_type,
-                waypoints: waypoints,
-                velocity: velocity }) {
+                hold: hold }) {
   this.arena = arena;
   this.id = (id !== undefined) ? id : arena.id_counter++;
   this.owner = arena.users[owner_id];
-  this.position = position;
-  this.target_type = target_type;
-  this.target_id = target_id;
+  this.pos = pos;
   this.shape_id = 1;
   this.owner.units[this.id] = this;
   arena.units[this.id] = this;
   this.stats = stats || [128, 128, 128];
-  this.hold = [0, 0, 0];
-  this.waypoints = waypoints || [];
-  this.velocity = velocity || [0, 0];
+  this.hold = hold || [0, 0, 0];
+  this.vel = vel || [0, 0];
   this.command = null;
-  this.rotation = scalar_angle(this.velocity);
+  this.rotation = scalar_angle(this.vel);
+
+  this.events = {
+    hold_full: new Event(),
+    out_of_range: new Event(),
+    no_target: new Event()
+  };
 }
 
 Unit.prototype.destroy = function() {
@@ -37,10 +38,10 @@ Unit.prototype.serialize = function() {
   return {
     id: this.id,
     owner_id: this.owner.id,
-    position: this.position,
+    pos: this.pos,
+    vel: this.vel,
     stats: this.stats,
-    waypoints: this.waypoints,
-    velocity: this.velocity
+    hold: this.hold
   };
 }
 
@@ -96,9 +97,9 @@ Unit.prototype.mine_efficiency = function() {
 
 Unit.prototype.tick = function() {
   this.current_acceleration = this.acceleration();
-  this.velocity = add(this.velocity, this.current_acceleration);
-  this.position = add(this.position, this.velocity);
-  if(leng(this.velocity) > 0.01) this.rotation = scalar_angle(this.velocity);
+  this.vel = add(this.vel, this.current_acceleration);
+  this.pos = add(this.pos, this.vel);
+  if(leng(this.vel) > 0.01) this.rotation = scalar_angle(this.vel);
   //this.attack_target();
   if(this.command) Unit.tick_handlers[this.command.type].call(this, this.command);
 }
@@ -107,20 +108,28 @@ Unit.tick_handlers = {}
 
 Unit.tick_handlers.attack = function({ target_id: target_id }) {
   let target = this.arena.units[target_id];
-  if (!target) return;
-  if (leng(sub(this.position, target.position)) < this.attack_range()) {
+  if (!target) {
+    this.events.no_target.call();
+    return;
+  }
+  if (leng(sub(this.pos, target.pos)) < this.attack_range()) {
     this.laser = this.receive_attack_resources(target.take_damage(this.attack_stats()));
   } else {
+    this.events.out_of_range.call();
     this.laser = null;
   }
 }
 
 Unit.tick_handlers.mine = function({ target_id: target_id }) {
   let target = this.arena.asteroid_field.asteroid(...target_id);
-  if (!target) return;
-  if (leng(sub(this.position, target.position)) < this.mine_range()) {
+  if (!target) {
+    this.events.no_target.call();
+    return;
+  }
+  if (leng(sub(this.pos, target.pos)) < this.mine_range()) {
     this.laser = this.receive_mine_resources(target.take_damage(this.mine_stats()));
   } else {
+    this.events.out_of_range.call();
     this.laser = null;
   }
 }
@@ -148,18 +157,18 @@ Unit.prototype.set_parent = function(parent_id) {
 Unit.prototype.acceleration = function() {
   if(this.destination) {
     let target = this.destination;
-    let dir_vec = add(target, inv(this.position));
+    let dir_vec = add(target, inv(this.pos));
     let target_vel = scale(norm(dir_vec), this.max_acceleration() * (Math.sqrt(1+8*leng(dir_vec)/this.max_acceleration())-1)/2);
-    if(Math.abs(dir_vec[0]) < EPSILON && Math.abs(dir_vec[1]) < EPSILON && leng(this.velocity) < this.max_acceleration()) {
+    if(Math.abs(dir_vec[0]) < EPSILON && Math.abs(dir_vec[1]) < EPSILON && leng(this.vel) < this.max_acceleration()) {
       this.destination = null;
       target_vel = [0, 0];
     }
     
-    let d_accel = add(target_vel, inv(this.velocity));
+    let d_accel = add(target_vel, inv(this.vel));
     return scale(norm(d_accel), Math.min(this.max_acceleration(), leng(d_accel)));
   } else {
     // Accelerate so that velocity becomes zero
-    return scale(norm(inv(this.velocity)), Math.min(this.max_acceleration(), leng(this.velocity)));
+    return scale(norm(inv(this.vel)), Math.min(this.max_acceleration(), leng(this.vel)));
   }
 }
 
@@ -172,10 +181,12 @@ Unit.prototype.take_damage = function(attack_stats) {
 
 Unit.prototype.receive_attack_resources = function(resources) {
   this.hold = zip(this.hold, dot(resources, this.attack_efficiency()), this.hold_capacity()).map(([h, r, c]) => min(h+r, c))
+  if (this.hold + '' === this.hold_capacity() + '') this.events.hold_full.call();
   return dot(resources, this.attack_efficiency());
 }
 
 Unit.prototype.receive_mine_resources = function(resources) {
   this.hold = zip(this.hold, dot(resources, this.mine_efficiency()), this.hold_capacity()).map(([h, r, c]) => min(h+r, c))
+  if (this.hold + '' === this.hold_capacity() + '') this.events.hold_full.call();
   return dot(resources, this.mine_efficiency());
 }
