@@ -87,3 +87,11 @@ Object.prototype.values = function() {
 Array.prototype.sum = function() {
   return this.reduce(nums.add);
 }
+
+Array.prototype.zip = function(...args) {
+  return zip(this, ...args);
+}
+
+Array.prototype.dot = function(...args) {
+  return dot(this, ...args);
+}
