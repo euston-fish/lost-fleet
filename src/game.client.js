@@ -384,6 +384,7 @@ let bind_game_stuff = (socket) => {
             if (target_type == 'unit' && target.owner.id == me) {
               //command(unit.id, 'set_parent', target_id)
               //TODO: reimplement this
+              command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
             } else {
               if (target_type == 'unit') {
                 command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
@@ -399,7 +400,6 @@ let bind_game_stuff = (socket) => {
               } else if (target_type == 'asteroid') {
                 command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
                 unit.events.out_of_range.register(() => {
-                  //command(unit.id, 'set_destination', add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.stats.Mine.Rn)));
                   command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.stats.Mine.Rn)) });
                   unit.events.done.register(() => {
                     command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
@@ -408,11 +408,6 @@ let bind_game_stuff = (socket) => {
               }
             }
           } else {
-            if (!event.altKey) {
-              //command(unit.id, 'clear_waypoints');
-            }
-            //command(unit.id, 'add_waypoint', add(screen_to_game(cursor_location), offset));
-            //command(unit.id, 'set_destination', add(screen_to_game(cursor_location), offset));
             command(unit.id, 'set_command', { type: 'move', dest: add(screen_to_game(cursor_location), offset) });
             unit.events.done.register(() => {});
             offset = add(offset, [36, 0]);
