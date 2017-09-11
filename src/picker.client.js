@@ -35,6 +35,10 @@ function create_pickers(attributes, group_order) {
         //picker.offsetLeft / (container.offsetWidth - 10), picker.offsetTop / (container.offsetHeight - 10)
         parseFloat(picker.style.left) / (container.offsetWidth - 10), parseFloat(picker.style.top) / (container.offsetHeight - 10)
       ];
+      picker.set_val = ([a, b]) => {
+        picker.style.left = a * (container.offsetWidth - 10) + 'px';
+        picker.style.top = b * (container.offsetHeight - 10) + 'px';
+      }
       container.appendChild(picker);
       result.pickers.push(picker);
       picker.style.display = picker.group == group_order[0] ? 'block' : 'none';
@@ -62,9 +66,15 @@ function create_pickers(attributes, group_order) {
     result.pickers.forEach((picker) => {
       res[picker.group][picker.attr.short] = picker.get_val();
     });
-    console.log(res);
     return new Stats(res);
   };
+
+  result.from_object = (stats) => {
+    result.pickers.forEach((picker) => {
+      picker.set_val(stats[picker.group][picker.attr.short]);
+    });
+  }
+
   result.select_in_n = (n) => () => document.getElementById(group_order[(group_order.indexOf(current_group) + n + group_order.length) % group_order.length]).onclick();
   return result;
 }

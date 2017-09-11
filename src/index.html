@@ -28,6 +28,15 @@ body {
   cursor: none;
 }
 
+#picker > div:hover, #groups > span:hover, #preset_list > li:hover {
+  color: #57BEFF;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
 canvas {
   position: absolute;
   display: block;
@@ -71,6 +80,11 @@ canvas {
         <div id="groups"></div>
         <div id="resources">255,255,255</div>
         <button id="create">Create</button>
+        <div id="presets">
+          <ul id="preset_list">
+          </ul>
+          <input id="preset_name"></input>
+        </div>
         <div id="selected"> </div>
       </div>
     </div>

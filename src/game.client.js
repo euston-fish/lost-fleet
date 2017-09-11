@@ -322,6 +322,8 @@ let start_game = (socket, on_finished) => {
     ui_state = { mode: 'CREATE' };
   };
 
+  let presets = create_presets(pickers);
+
   add_event_listener(w, 'contextmenu', (event) => event.preventDefault());
   add_event_listener(canvas, 'mousedown', (event) => cursor_location = [event.x, event.y]);
   add_event_listener(canvas, 'mousemove', (event) => cursor_location = [event.x, event.y]);
