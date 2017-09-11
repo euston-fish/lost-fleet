@@ -178,8 +178,6 @@ let bind_game_stuff = (socket) => {
     ctx.restore();
 
     //resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
-    if (this.hold)
-      resource_display.innerText = this.hold.num_pretty();
   }
 
   Asteroid.prototype.draw = function() {
@@ -302,6 +300,11 @@ let bind_game_stuff = (socket) => {
           ctx.stroke();
           ctx.beginPath();
         }
+        resource_display.innerText = selected
+          .values()
+          .reduce((acc, x) => add(acc, x.hold), [0, 0])
+          .num_pretty();
+
       });
 
       if (ui_state.mode === 'CREATE') {
