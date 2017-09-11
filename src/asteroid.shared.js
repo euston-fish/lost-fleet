@@ -26,7 +26,7 @@ AsteroidField.prototype.block = function(x, y) {
         }
       }
     }
-    while(num_asteroids-- > 0) {
+    while(num_asteroids --> 0) {
       this.asteroids[[x, y]+''][num_asteroids] = new Asteroid(this, { block: [x, y], index: num_asteroids });
     }
   }

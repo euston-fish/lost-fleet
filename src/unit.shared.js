@@ -13,6 +13,7 @@ function Unit(arena, { id: id,
   this.owner.units[this.id] = this;
   arena.units[this.id] = this;
   this.pos = pos;
+  this.dest = pos;
   this.stats = stats;
 
   this.vel = [0, 0];
@@ -27,7 +28,8 @@ function Unit(arena, { id: id,
   this.events = {
     hold_full: new Event(),
     out_of_range: new Event(),
-    no_target: new Event()
+    no_target: new Event(),
+    done: new Event()
   };
 }
 
@@ -57,54 +59,18 @@ Unit.prototype.receive = function(command, ...params) {
 
 Unit.prototype.radius = function () {
   // TODO: make less powerful units smaller?
+  // (currently it's just the unit's health that determines size)
   return mix(leng(this.health)/leng(this.stats.cost), 8, 15);
-}
-
-Unit.prototype.max_acceleration = function() {
-  return (this.stats[0] + 1) / 500.0;
-}
-
-Unit.prototype.attack_range = function() {
-  return this.stats[1] / 3;
-}
-
-Unit.prototype.attack_stats = function() {
-  return [30, 30, 30];
-}
-
-Unit.prototype.attack_efficiency = function() {
-  return [0.1, 0.1, 0.1];
-}
-
-Unit.prototype.defence = function() {
-  return [0.9, 0.9, 0.9];
-}
-
-Unit.prototype.hold_capacity = function() {
-  return [100, 100, 100];
-}
-
-Unit.prototype.mine_range = function() {
-  return 200;
-}
-
-Unit.prototype.mine_stats = function() {
-  return [30, 30, 30];
-}
-
-Unit.prototype.mine_efficiency = function() {
-  return [0.5, 0.5, 0.5];
 }
 
 /// Tick handling ///
 
 Unit.prototype.tick = function() {
-  this.current_acceleration = this.acceleration();
-  this.vel = add(this.vel, this.current_acceleration);
-  this.pos = add(this.pos, this.vel);
-  if(leng(this.vel) > 0.01) this.rotation = scalar_angle(this.vel);
-  //this.attack_target();
+  //this.current_acceleration = this.acceleration();
+  //this.vel = add(this.vel, this.current_acceleration);
   if(this.command) Unit.tick_handlers[this.command.type].call(this, this.command);
+  if(leng(this.vel) > 0.01) this.rotation = scalar_angle(this.vel);
+  this.pos = add(this.pos, this.vel);
 }
 
 Unit.tick_handlers = {}
@@ -137,6 +103,13 @@ Unit.tick_handlers.mine = function({ target_id: target_id }) {
   }
 }
 
+Unit.tick_handlers.move = function({ dest: dest }) {
+  this.vel = add(this.vel, this.acceleration(dest));
+  if (this.vel == '0,0') {
+    this.events.done.call();
+  }
+}
+
 /// Commands ///
 //
 // These are commands that the unit can receive
@@ -147,24 +120,21 @@ Unit.handlers.set_command = function(command) {
   this.command = command;
 }
 
-Unit.handlers.set_destination = function(destination) {
-  this.destination = destination;
-}
+/*Unit.handlers.set_destination = function(dest) {
+  this.dest = dest;
+}*/
 
 /// Helpers ///
 
-Unit.prototype.set_parent = function(parent_id) {
-  this.parent = this.arena.units[parent_id];
-}
-
-Unit.prototype.acceleration = function() {
+Unit.prototype.acceleration = function(dest) {
+  return acceleration(this.pos, dest, this.vel, this.stats.Misc.Ac);
+  /*
   let max_accel = this.stats.Misc.Ac;
-  if(this.destination) {
-    let target = this.destination;
+  if(this.dest) {
+    let target = this.dest;
     let dir_vec = add(target, inv(this.pos));
     let target_vel = scale(norm(dir_vec), max_accel * (Math.sqrt(1+8*leng(dir_vec)/max_accel)-1)/2);
     if(Math.abs(dir_vec[0]) < EPSILON && Math.abs(dir_vec[1]) < EPSILON && leng(this.vel) < max_accel) {
-      this.destination = null;
       target_vel = [0, 0];
     }
     
@@ -174,6 +144,7 @@ Unit.prototype.acceleration = function() {
     // Accelerate so that velocity becomes zero
     return scale(norm(inv(this.vel)), Math.min(max_accel, leng(this.vel)));
   }
+  */
 }
 
 Unit.prototype.take_damage = function(attack_stats) {

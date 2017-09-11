@@ -55,6 +55,16 @@ function in_rounded_rectangle(point, radius, corner_a, corner_b) {
   return false;
 }
 
+let acceleration = (pos, dest, vel, acc) => {
+  let dir_vec = sub(dest, pos);
+  let target_vel = scale(norm(dir_vec), acc * (Math.sqrt(1+8*leng(dir_vec)/acc)-1)/2);
+  if(leng(dir_vec) < EPSILON && leng(vel) < acc) {
+    target_vel = [0, 0];
+  }
+  let d_accel = sub(target_vel, vel);
+  return scale(norm(d_accel), min(acc, leng(d_accel)));
+}
+
 // RNG inspired by https://gist.github.com/blixt/f17b47c62508be59987b
 function RNG(seed) {
   if(seed < 0) seed *= -1;
