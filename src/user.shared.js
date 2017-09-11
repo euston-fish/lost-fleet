@@ -1,7 +1,8 @@
-function User(arena, { id: id, units: units, resources: resources, color: color }) {
+function User(arena, { id: id, username: username, units: units, resources: resources, color: color }) {
   this.id = (id !== undefined) ? id : arena.id_counter++;
   arena.users[this.id] = this;
   this.units = {};
+  this.username = username;
   this.resources = resources || [2550, 2550, 2550];
   for(let unit of (units || [])) new Unit(arena, Object.assign({ owner_id: this.id }, unit));
   this.color = color;
@@ -11,6 +12,7 @@ User.prototype.serialize = function() {
   return {
     id: this.id,
     color: this.color,
+    username: this.username,
     units: Object.values(this.units).map((unit) => unit.serialize())
   };
 }

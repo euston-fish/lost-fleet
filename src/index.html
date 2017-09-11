@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <title>Lost Fleet</title>
 <style>
+* {
+  font-family: monospace;
+}
 body {
   cursor: default;
   margin: 0;
   background-color: #07002B;
   user-select: none;
+  color: white;
 }
 #picker > div {
   width: 1em;
@@ -41,10 +45,9 @@ canvas {
   right: 1em;
   bottom: 1em;
   width: 20em;
-  font-family: monospace;
   color: #eee;
 }
-#create {
+button, input {
   color: #57BEFF;
   border: 2px solid #57BEFF;
   text-align: center;
@@ -52,15 +55,38 @@ canvas {
   outline: none;
   width: 100%;
   margin-top: 5px;
+  padding: 5px;
+  box-sizing: border-box;
 }
-#create:active {
+button:active {
   color: #278DCC;
   border-color: #278DCC;
+}
+#join > span {
+  white-space: nowrap;
+}
+#join, #room {
+  max-width: 400px;
+  margin: 0 auto;
+  margin-top: 30vh;
 }
 </style>
   </head>
   <body id="q">
-    <div id="join"> <input type="text"></input> </div>
+    <div id="join">
+      <span>
+        Room ID: <input type="text" id="game_name">
+      </span>
+      <span>
+        Username: <input type="text" id="username">
+      </span>
+      <button id="join_game">Join Game</button>
+    </div>
+    <div id="room">
+      <div id="room_name"></div>
+      <ul id="players"></ul>
+      <button id="start">Start</button>
+    </div>
     <div id="game" style="display: none">
       <canvas id="far_stars"></canvas>
       <canvas id="mid_stars"></canvas>

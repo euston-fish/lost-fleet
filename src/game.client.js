@@ -1,4 +1,4 @@
-let start_game = (socket, on_finished) => {
+let bind_game_stuff = (socket) => {
   let me, mothership, cursor_location, selected = {};
   let selection_groups = {};
   let arena;
@@ -441,51 +441,59 @@ let start_game = (socket, on_finished) => {
     }
   };
 
-  add_event_listener(w, 'keydown', (event) => {
-    pressed_keys[event.key] = event;
-    let shortcut_description = '';
-    if (event.ctrlKey) {
-      shortcut_description += 'C-';
-      pressed_keys['ctrl'] = event;
-    }
-    if (event.altKey) {
-      shortcut_description += 'M-';
-      pressed_keys['alt'] = event;
-    }
-    if (event.shiftKey) {
-      shortcut_description += 'S-';
-      pressed_keys['shift'] = event;
-    }
-
-    if(/^\d$/.test(event.key)) {
+  let keys_done = false;
+  let init_key_listeners = () => {
+    if (keys_done) return;
+    keys_done = true;
+    add_event_listener(w, 'keydown', (event) => {
+      pressed_keys[event.key] = event;
+      let shortcut_description = '';
       if (event.ctrlKey) {
-        selection_groups[event.key] = Object.assign({}, selected);
-      } else {
-        selected = Object.assign({}, selection_groups[event.key] || {});
+        shortcut_description += 'C-';
+        pressed_keys['ctrl'] = event;
       }
-    } else {
-      shortcut_description += event.key;
-      if (shortcut_map[shortcut_description]) shortcut_map[shortcut_description](event);
-    }
-  });
+      if (event.altKey) {
+        shortcut_description += 'M-';
+        pressed_keys['alt'] = event;
+      }
+      if (event.shiftKey) {
+        shortcut_description += 'S-';
+        pressed_keys['shift'] = event;
+      }
 
-  add_event_listener(w, 'keyup', (event) => {
-    delete pressed_keys[event.key];
-    if (!event.shiftKey) delete pressed_keys['shift'];
-    if (!event.ctrlKey) delete pressed_keys['ctrl'];
-    if (!event.altKey) delete pressed_keys['alt'];
-  });
+      if(/^\d$/.test(event.key)) {
+        if (event.ctrlKey) {
+          selection_groups[event.key] = Object.assign({}, selected);
+        } else {
+          selected = Object.assign({}, selection_groups[event.key] || {});
+        }
+      } else {
+        shortcut_description += event.key;
+        if (shortcut_map[shortcut_description]) shortcut_map[shortcut_description](event);
+      }
+    });
 
-  socket.on('connected', (arena_, me_) => {
+    add_event_listener(w, 'keyup', (event) => {
+      delete pressed_keys[event.key];
+      if (!event.shiftKey) delete pressed_keys['shift'];
+      if (!event.ctrlKey) delete pressed_keys['ctrl'];
+      if (!event.altKey) delete pressed_keys['alt'];
+    });
+  }
+
+  socket.on('create_arena', (arena_, me_) => {
+    init_key_listeners();
+    el('room').style.display = 'none';
+    el('game').style.display = 'block';
     console.log(arena_);
     arena = new Arena(arena_);
     me = me_;
     view_center = moi().centroid();
     console.log('connected', arena, me);
+    window.requestAnimationFrame(draw);
   });
 
   socket.on("error", () => {
     console.log("error")
   });
-  window.requestAnimationFrame(draw);
 };
