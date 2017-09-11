@@ -190,11 +190,10 @@ let bind_game_stuff = (socket) => {
     ctx.moveTo(...game_to_screen(this.shape()[0]));
     this.shape().forEach((pos) => ctx.lineTo(...game_to_screen(pos)))
     ctx.closePath();
-    let shade = Math.floor(this.stats.reduce(nums.add, 0) / 30);
-    //let color = this.stats.map((num) => Math.floor(num / 10));
-    let color = '#ddd'; // TODO: asteroid color depending on alpha and beta
+    let shade = Math.floor(this.stats.reduce(nums.add, 0) / 20);
+    let inverse = 255 - shade;
     ctx.fillStyle = 'rgb(' + [shade, shade, shade] + ')';
-    ctx.strokeStyle = 'rgb(' + color + ')';
+    ctx.strokeStyle = 'rgb(' + [inverse, inverse, inverse] + ')';
     ctx.lineWidth = 3;
     ctx.fill();
     ctx.stroke();
