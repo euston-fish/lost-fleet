@@ -1,10 +1,6 @@
 let el = (id) => document.getElementById(id);
 window.addEventListener("load", function() {
-  const USERNAMES = [
-    'Jeff',
-    'Goeff'
-  ]
-  let socket = io({ upgrade: false, transports: ["websocket"] });
+  let socket = io({ upgrade: false, transports: ['websocket'] });
 
   let player_count = 0;
   let show_elem = (elem, show) => el(elem).style.display = show ? 'block' : 'none';
@@ -38,6 +34,8 @@ window.addEventListener("load", function() {
 
   let username_field = el('username');
   let game_name_field = el('game_name');
+
+  username_field.value = NAMES.sample();
 
   el('join_game').onclick = () => {
     socket.emit('create_game', game_name_field.value, username_field.value)

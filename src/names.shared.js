@@ -1,25 +1,22 @@
-let names = [
-  'Bodkin Van Horn',
-  'Hoos-Foos',
-  'Snimm',
-  'Hot-Shot',
-  'Sunny Jim',
-  'Shadrack',
-  'Blinkey',
-  'Stuffy',
-  'Stinkey',
-  'Putt-Putt',
-  'Moon Face',
-  'Marvin O\'Gravel Balloon Face',
-  'Ziggy',
-  'Soggy Muff',
-  'Buffalo Bill',
-  'Biffalo Buff',
-  'Sneepy',
-  'Weepy Weed',
-  'Paris Garters',
-  'Harris Tweed',
-  'Sir Michael Carmichael Zutt',
-  'Oliver Boliver Butt',
-  'Zanzibar Buck-Buck McFace'
+const NAMES = [
+  'Assyrians',
+  'Babylonians',
+  'Choson',
+  'Egyptians',
+  'Greeks',
+  'Hittites',
+  'Minoans',
+  'Persians',
+  'Phoenicians',
+  'Shang',
+  'Sumerians',
+  'Yamato',
+  'Carthaginians',
+  'Macedonians',
+  'Palmyrans',
+  'Romans'
 ];
+
+Array.prototype.sample = function() {
+  return this.splice(Math.random() * this.length, 1)[0];
+}
