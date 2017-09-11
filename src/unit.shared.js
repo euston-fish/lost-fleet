@@ -136,7 +136,8 @@ Unit.tick_handlers.construct = function({ target_id: target_id }) {
 }
 
 Unit.tick_handlers.move = function({ dest: dest }) {
-  this.vel = add(this.vel, this.acceleration(dest));
+  this.current_acceleration = this.acceleration(dest);
+  this.vel = add(this.vel, this.current_acceleration);
   if (this.vel == '0,0') {
     this.events.done.call();
   }
