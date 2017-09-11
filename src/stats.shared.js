@@ -4,7 +4,6 @@ let Stats;
   let norm_unscaled_value = (value) => (1-1/(value+1));
 
   Stats = function(norm_stats) {
-    //this.norm_stats = norm_stats;
     this.Attack = {
       Rn: leng(norm_stats.Attack.Rn.map((v) => 60*norm_scaled_value(v))),
       Pw: norm_stats.Attack.Pw.map((v) => 5*norm_scaled_value(v)),

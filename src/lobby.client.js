@@ -36,6 +36,7 @@ window.addEventListener("load", function() {
   let game_name_field = el('game_name');
 
   username_field.value = NAMES.sample();
+  game_name_field.value = Math.floor(Math.random() * 1000000).toString(16).toUpperCase();
 
   el('join_game').onclick = () => {
     socket.emit('create_game', game_name_field.value, username_field.value)

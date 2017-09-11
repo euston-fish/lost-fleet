@@ -8,6 +8,7 @@ let bind_game_stuff = (socket) => {
   let ui_state = { mode: 'NONE' };
   let el = (id) => document.getElementById(id);
   let resource_display = el('resources');;
+  let cost_display = el('cost');
   let canvas = el('c');
   let ctx = canvas.getContext('2d');
   let add_event_listener = (object, ...args) => object.addEventListener(...args);
@@ -39,6 +40,11 @@ let bind_game_stuff = (socket) => {
       { short: 'Cp', title: 'Capacity' },
       { short: 'Tr', title: 'Transfer' } ]
   }, ['Attack', 'Mine', 'Construct', 'Misc']);
+
+  pickers.onchange = () => {
+    let stats = pickers.to_object();
+    cost_display.innerText = stats.cost.num_pretty();
+  }
 
   {
     let old_destroy = Unit.prototype.destroy;
@@ -172,7 +178,8 @@ let bind_game_stuff = (socket) => {
     ctx.restore();
 
     //resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
-    resource_display.innerText = this.hold;
+    if (this.hold)
+      resource_display.innerText = this.hold.num_pretty();
   }
 
   Asteroid.prototype.draw = function() {
