@@ -297,6 +297,10 @@ let start_game = (socket, on_finished) => {
           ctx.beginPath();
         }
       });
+
+      if (ui_state.mode === 'CREATE') {
+        Object.setPrototypeOf({ owner: { color: 'rgba(255, 255, 255, 0.5)' }, rotation: Math.PI/2, pos: screen_to_game(cursor_location), radius: () => 15, shape_id: 1 }, Unit.prototype).draw();
+      }
     }
     window.requestAnimationFrame(draw);
   }
@@ -308,14 +312,14 @@ let start_game = (socket, on_finished) => {
     arena.tick();
   }
 
-  let command = (...args) => socket.emit('command', args)
+  let command = (...args) => socket.emit('command', 'command_unit', ...args)
+  let make_baby = (...args) => socket.emit('command', 'make_baby', ...args)
   socket.on('tick', handle_tick);
 
   let create_button = el('create');
   create_button.onclick = () => {
-    if (selected.values()[0]) {
-      // TODO Re-implement this
-    }
+    // enter create mode
+    ui_state = { mode: 'CREATE' };
   };
 
   add_event_listener(w, 'contextmenu', (event) => event.preventDefault());
@@ -326,7 +330,7 @@ let start_game = (socket, on_finished) => {
   add_event_listener(canvas, 'mousedown', (event) => {
     if ((event.button === 0 && pressed_keys['p']) || event.button === 1) {
       ui_state = { mode: 'PAN', origin: cursor_location, original_view_center: view_center };
-    } else if (event.button === 0) {
+    } else if (event.button === 0 && ui_state.mode === 'NONE') {
       ui_state = { mode: 'SELECT', origin: cursor_location, additive: pressed_keys['shift'] };
     }
   });
@@ -347,6 +351,11 @@ let start_game = (socket, on_finished) => {
         .filter((unit) => in_rounded_rectangle(unit.pos, unit.radius(), screen_to_game(cursor_location), screen_to_game(ui_state.origin)))
         // Put each of these units into the selected set
         .forEach((unit) => selected[unit.id] = unit);
+      ui_state = { mode: 'NONE' };
+    } else if (ui_state.mode === 'PAN') {
+      ui_state = { mode: 'NONE' };
+    } else if (ui_state.mode === 'CREATE') {
+      make_baby(screen_to_game(cursor_location), pickers.to_object());
     } else if (event.button === 2) {
       let offset = [0, 0];
       let target_id;
@@ -412,8 +421,6 @@ let start_game = (socket, on_finished) => {
     }
   });
 
-  add_event_listener(canvas, 'mouseup', (event) => ui_state = { mode: 'NONE' });
-
   let shortcut_map = {
     e: () => selected = Object.assign({}, arena.users[me].units),
     q: () => selected = {},
@@ -427,6 +434,10 @@ let start_game = (socket, on_finished) => {
     "S-Tab": (event) => {
       event.preventDefault();
       pickers.select_in_n(-1)();
+    },
+    Escape: (event) => {
+      event.preventDefault();
+      ui_state = { mode: 'NONE' };
     }
   };
 

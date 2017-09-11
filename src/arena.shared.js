@@ -35,6 +35,11 @@ Arena.handlers.command_unit = function(id, ...params) {
   if(this.units[id]) this.units[id].receive(...params);
 }
 
+Arena.handlers.make_baby = function(owner_id, pos, stats) {
+  let u = new Unit(this, { owner_id: owner_id, pos: pos, stats: stats });
+  console.log(u, u.stats);
+}
+
 Arena.handlers.remove_user = function(user_id) {
   console.log(this);
   for (let unit of Object.values(this.users[user_id].units)) {

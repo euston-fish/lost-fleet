@@ -55,7 +55,7 @@
             id: client.id,
             color: random_color(),
             units: [
-              { pos: pos, vel: [0, 0], stats: mothership_stats, health: mothership_stats.cost }
+              { pos: pos, vel: [0, 0], stats: mothership_stats, health: mothership_stats.cost, activated: true }
             ]
           }
         }),
@@ -65,13 +65,26 @@
       let commands = [];
 
       waiting.forEach((client) => {
-        client.command_handler = ([destination, ...params]) => {
+        let command_unit = (unit_id, ...params) => {
+          if (arena.users[client.id].units[unit_id] !== undefined) {
+            commands.push(['command_unit', unit_id, ...params]);
+          }
+        };
+        let make_baby = (pos, stats) => {
+          commands.push(['make_baby', client.id, pos, stats]);
+        }
+        client.command_handler = (type, ...params) => {
+          console.log('received command', type, ...params);
+          if (type === 'command_unit') command_unit(...params);
+          if (type === 'make_baby') make_baby(...params);
+        };
+        /*client.command_handler = ([destination, ...params]) => {
           console.log('received command', destination, ...params);
           if (arena.users[client.id].units[destination] !== undefined) {
             console.log('desination recognised');
             commands.push(['command_unit', destination, ...params]);
           }
-        };
+        };*/
         client.socket.emit('connected', arena.serialize(), client.id);
       });
 

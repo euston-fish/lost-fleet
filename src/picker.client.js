@@ -32,7 +32,8 @@ function create_pickers(attributes, group_order) {
         current_picker = picker;
       });
       picker.get_val = () => [
-        picker.offsetLeft / (container.offsetWidth - 10), picker.offsetTop / (container.offsetHeight - 10)
+        //picker.offsetLeft / (container.offsetWidth - 10), picker.offsetTop / (container.offsetHeight - 10)
+        parseFloat(picker.style.left) / (container.offsetWidth - 10), parseFloat(picker.style.top) / (container.offsetHeight - 10)
       ];
       container.appendChild(picker);
       result.pickers.push(picker);
@@ -61,6 +62,7 @@ function create_pickers(attributes, group_order) {
     result.pickers.forEach((picker) => {
       res[picker.group][picker.attr.short] = picker.get_val();
     });
+    console.log(res);
     return new Stats(res);
   };
   result.select_in_n = (n) => () => document.getElementById(group_order[(group_order.indexOf(current_group) + n + group_order.length) % group_order.length]).onclick();

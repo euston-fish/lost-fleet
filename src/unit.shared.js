@@ -6,7 +6,8 @@ function Unit(arena, { id: id,
                 owner_id: owner_id,
                 pos: pos,
                 stats: stats,
-                health: health }) {
+                health: health,
+                activated: activated }) {
   this.arena = arena;
   this.id = (id !== undefined) ? id : arena.id_counter++;
   this.owner = arena.users[owner_id];
@@ -19,7 +20,7 @@ function Unit(arena, { id: id,
   this.vel = [0, 0];
   this.hold = [0, 0];
   this.health = health || [0, 0];
-  this.activated = false;
+  this.activated = activated || false;
 
   this.command = null;
   this.shape_id = 1;
