@@ -47,7 +47,7 @@
           color: random_color(),
           username: client.username,
           units: [
-            { pos: pos, vel: [0, 0], stats: mothership_stats, health: mothership_stats.cost, activated: true }
+            { pos: pos, vel: [0, 0], stats: mothership_stats.serialize(), health: mothership_stats.cost, activated: true }
           ]
         }
       }),
@@ -63,6 +63,7 @@
         }
       };
       let make_baby = (pos, stats) => {
+        Object.setPrototypeOf(stats, Object.prototype);
         commands.push(['make_baby', client.id, pos, stats]);
       }
       client.command_handler = (type, ...params) => {
@@ -127,6 +128,14 @@
       //TODO: handle disconnection better
     });
 
-    socket.on('command', (...args) => client.command_handler(...args));
+    socket.on('command', (args) => {
+      console.log('command');
+      //console.log(args[2]);
+      //console.log(Object.getPrototypeOf(args[2].Attack.Rn));
+      //args = fix(args);
+      //console.log(Object.getPrototypeOf(args[2].Attack.Rn));
+      //console.log(args[2].Attack.Rn.map);
+      client.command_handler(...args);
+    });
   }
 })();

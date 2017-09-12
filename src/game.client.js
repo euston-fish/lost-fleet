@@ -156,6 +156,16 @@ let bind_game_stuff = (socket) => {
           ctx.lineTo(...game_to_screen(target.pos));
           ctx.stroke();
         }
+      } else if (this.command.type === 'construct') {
+        let target = this.arena.units[this.command.target_id];
+        if (target && this.laser) {
+          ctx.strokeStyle = 'rgb('+this.laser+')';
+          ctx.beginPath();
+          ctx.lineWidth = 3;
+          ctx.moveTo(...pos);
+          ctx.lineTo(...game_to_screen(target.pos));
+          ctx.stroke();
+        }
       }
       ctx.save();
       ctx.translate(...pos);
@@ -308,8 +318,8 @@ let bind_game_stuff = (socket) => {
     arena.tick();
   }
 
-  let command = (...args) => socket.emit('command', 'command_unit', ...args)
-  let make_baby = (...args) => socket.emit('command', 'make_baby', ...args)
+  let command = (...args) => socket.emit('command', ['command_unit', ...args])
+  let make_baby = (...args) => socket.emit('command', ['make_baby', ...args])
   socket.on('tick', handle_tick);
 
   let create_button = el('create');
@@ -352,7 +362,7 @@ let bind_game_stuff = (socket) => {
     } else if (ui_state.mode === 'PAN') {
       ui_state = { mode: 'NONE' };
     } else if (ui_state.mode === 'CREATE') {
-      make_baby(screen_to_game(cursor_location), pickers.to_object());
+      make_baby(screen_to_game(cursor_location), pickers.to_object().serialize());
     } else if (event.button === 2) {
       let offset = [0, 0];
       let target_id;
@@ -379,34 +389,38 @@ let bind_game_stuff = (socket) => {
         .forEach((unit) => {
           if (target) {
             if (target_type == 'unit' && target.owner.id == me) {
-              //command(unit.id, 'set_parent', target_id)
-              //TODO: reimplement this
               command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
+              unit.events.out_of_range = () => {
+                command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.stats.Construct.Rn)) });
+                unit.events.done = () => {
+                  command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
+                };
+              }
             } else {
               if (target_type == 'unit') {
                 command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
                 //unit.events.hold_full.register(() => {
                   //alert('hold full');
                 //});
-                unit.events.out_of_range.register(() => {
+                unit.events.out_of_range = () => {
                   command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.stats.Attack.Rn)) });
-                  unit.events.done.register(() => {
+                  unit.events.done = () => {
                     command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
-                  });
-                });
+                  };
+                };
               } else if (target_type == 'asteroid') {
                 command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
-                unit.events.out_of_range.register(() => {
+                unit.events.out_of_range = () => {
                   command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.stats.Mine.Rn)) });
-                  unit.events.done.register(() => {
+                  unit.events.done = () => {
                     command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
-                  });
-                });
+                  };
+                };
               }
             }
           } else {
             command(unit.id, 'set_command', { type: 'move', dest: add(screen_to_game(cursor_location), offset) });
-            unit.events.done.register(() => {});
+            unit.events.done = () => {};
             offset = add(offset, [36, 0]);
           }
         });
