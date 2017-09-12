@@ -10,13 +10,16 @@ function create_pickers(attributes, group_order) {
     elem.innerText = group;
     elem.id = group;
     elem.className = group == current_group ? 'selected' : 'deselected';
-    elem.onclick = () => result.pickers.forEach((picker) => {
+    elem.onclick = () => {
       current_group = group;
-      picker.style.display = picker.group == group ? 'block' : 'none';
+      result.pickers.forEach((picker) => {
+        picker.style.display = picker.group == group ? 'block' : 'none';
+        //picker.style.opacity = picker.group == group ? 1 : 0.3;
+      });
       group_order.forEach((gr_name) => {
         document.getElementById(gr_name).className = gr_name == group ? 'selected' : 'deselected';
       });
-    });
+    };
     if (pos != 0) groups_container.appendChild(document.createTextNode(' | '));
     groups_container.appendChild(elem);
     attributes[group].forEach((attr) => {
@@ -25,7 +28,7 @@ function create_pickers(attributes, group_order) {
       picker.style.position = 'absolute';
       picker.style.top = Math.random() * (container.offsetHeight - 10) + 'px';
       picker.style.left = Math.random() * (container.offsetWidth - 10) + 'px';
-      picker.innerText = attr.short;
+      picker.innerText = attr.short; // + group[0];
       picker.title = attr.title;
       picker.attr = attr;
       picker.addEventListener('mousedown', (event) => {
@@ -44,6 +47,7 @@ function create_pickers(attributes, group_order) {
       picker.style.display = picker.group == group_order[0] ? 'block' : 'none';
     });
   });
+  //groups_container.firstChild.onclick();
 
   document.addEventListener('mousemove', (event) => {
     if (current_picker) {

@@ -1,5 +1,15 @@
 let create_presets = (pickers) => {
-  let preset_list = el('preset_list');
+  let sr = // set recursively
+    (o, p) => { p.entries().forEach(([k, v]) => typeof(val) === 'object' ? sr(o[k], v) : o[k] = v); return o; };
+  Node.prototype.ac = Node.prototype.appendChild;
+  Node.prototype.pc = function(n) {
+    this.insertBefore(n, this.firstChild);
+  };
+  Object.prototype.sr = function(p) { return sr(this, p) };
+  let preset_el = el('presets');
+  let preset_list = ce('ul').sr({ id: 'preset_list' });
+  console.log('preset_list:', preset_list);
+  preset_el.pc(preset_list);
   let preset_name = el('preset_name');
   let presets = {};
 

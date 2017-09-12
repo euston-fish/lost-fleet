@@ -6,7 +6,6 @@ let bind_game_stuff = (socket) => {
   let moi = () => arena.users[me];
   let pressed_keys = {};
   let ui_state = { mode: 'NONE' };
-  let el = (id) => document.getElementById(id);
   let resource_display = el('resources');;
   let cost_display = el('cost');
   let canvas = el('c');
@@ -14,6 +13,7 @@ let bind_game_stuff = (socket) => {
   let add_event_listener = (object, ...args) => object.addEventListener(...args);
   let w = window;
   let pickers;
+  let presets;
 
   let game_to_screen = (game_pos, view_center_) => {
     let vc = view_center_ || view_center
@@ -318,7 +318,6 @@ let bind_game_stuff = (socket) => {
     ui_state = { mode: 'CREATE' };
   };
 
-  let presets = create_presets(pickers);
 
   add_event_listener(w, 'contextmenu', (event) => event.preventDefault());
   add_event_listener(canvas, 'mousedown', (event) => cursor_location = [event.x, event.y]);
@@ -491,6 +490,8 @@ let bind_game_stuff = (socket) => {
       let stats = pickers.to_object();
       cost_display.innerText = stats.cost.num_pretty();
     }
+    cost_display.innerText = pickers.to_object().cost.num_pretty();
+    presets = create_presets(pickers);
     console.log(arena_);
     arena = new Arena(arena_);
     me = me_;
