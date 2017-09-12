@@ -70,13 +70,6 @@
         if (type === 'command_unit') command_unit(...params);
         if (type === 'make_baby') make_baby(...params);
       };
-      /*client.command_handler = ([destination, ...params]) => {
-        console.log('received command', destination, ...params);
-        if (arena.users[client.id].units[destination] !== undefined) {
-          console.log('desination recognised');
-          commands.push(['command_unit', destination, ...params]);
-        }
-      };*/
       client.socket.emit('create_arena', arena.serialize(), client.id);
     });
 
@@ -88,7 +81,7 @@
         arena.receive(command);
       }
       arena.tick();
-      for(client of players) {
+      for (let client of players) {
         client.socket.emit('tick', tick_commands);
       }
     }, 100);
