@@ -15,7 +15,7 @@ function Unit(arena, { id: id,
   arena.units[this.id] = this;
   this.pos = pos;
   this.dest = pos;
-  this.stats = stats;
+  this.stats = new Stats(stats);
 
   this.vel = [0, 0];
   this.hold = [0, 0];
@@ -27,10 +27,10 @@ function Unit(arena, { id: id,
   this.rotation = scalar_angle(this.vel);
 
   this.events = {
-    hold_full: new Event(),
-    out_of_range: new Event(),
-    no_target: new Event(),
-    done: new Event()
+    hold_full: () => {},
+    out_of_range: () => {},
+    no_target: () => {},
+    done: () => {}
   };
 }
 
@@ -45,7 +45,7 @@ Unit.prototype.serialize = function() {
     id: this.id,
     owner_id: this.owner.id,
     pos: this.pos,
-    stats: this.stats,
+    stats: this.stats.serialize(),
     health: this.health,
     activated: this.activated
   };
@@ -80,11 +80,11 @@ Unit.tick_handlers = {}
 
 Unit.tick_handlers.attack = function({ target_id: target_id }) {
   let target = this.arena.units[target_id];
-  if (!target) return this.events.no_target.call();
+  if (!target) return this.events.no_target();
   if (leng(sub(this.pos, target.pos)) < this.stats.Attack.Rn) {
     this.laser = this.receive_attack_resources(target.take_damage(this.stats.Attack.Pw));
   } else {
-    this.events.out_of_range.call();
+    this.events.out_of_range();
     this.laser = null;
   }
 }
@@ -92,46 +92,46 @@ Unit.tick_handlers.attack = function({ target_id: target_id }) {
 Unit.tick_handlers.mine = function({ target_id: target_id }) {
   let target = this.arena.asteroid_field.asteroid(...target_id);
   if (!target) {
-    this.events.no_target.call();
+    this.events.no_target();
     return;
   }
   if (leng(sub(this.pos, target.pos)) < this.stats.Mine.Rn) {
     this.laser = this.receive_mine_resources(target.take_damage(this.stats.Mine.Pw));
   } else {
-    this.events.out_of_range.call();
+    this.events.out_of_range();
     this.laser = null;
   }
 }
 
-let add_health = (unit, health) => {
-   // adds health, and returns the amount added
-   console.log(health, unit.health, unit.stats.cost);
-   health = health
-            .zip(unit.health, unit.stats.cost)
-            .map(([H, h, c]) =>
-              min(c-h, H));
-  unit.health = add(unit.health, health);
-  if (unit.health + '' === unit.stats.cost + '') unit.activated = true;
-  return health;
-};
-
 let construct = (ctor, ctee) => {
   if (leng(sub(ctor.pos, ctee.pos)) < ctor.stats.Construct.Rn) {
-    let health = ctor.stats.Construct.Pw
-                 .zip(ctor.hold)
-                 .map((l) => min(...l))
-                 .dot(ctor.stats.Construct.Ef);
-    let health_added = add_health(ctee, health);
-    ctor.hold = sub(ctor.hold, health.zip(ctor.stats.Construct.Ef).map(([h, ef]) => h/ef));
-    return health;
+    // The max amount that could be transferred from the ctor
+    console.log(typeof(ctor.stats.Construct.Pw));
+    console.log(Array.prototype);
+    console.log(ctor.stats.Construct.Pw.zip);
+    let beam_amount = ctor.stats.Construct.Pw
+      .zip(ctor.hold)
+      .map((l) => min(...l))
+      .dot(ctor.stats.Construct.Ef);
+    // The max amount that could be received by the ctee
+    let health_remaining = sub(ctee.stats.cost, ctee.health);
+    // The actual amount that will be received
+    let health_added = zip(beam_amount, health_remaining).map((l) => min(...l));
+    ctee.health = add(ctee.health, health_added);
+    ctor.hold = sub(ctor.hold, zip(health_added, ctor.stats.Construct.Ef).map(([h, ef]) => h/ef));
+
+    if (ctee.health + '' === ctee.stats.cost + '') ctee.activated = true;
+    if (health_remaining == '0,0') ctor.events.done();
+    return health_added;
+  } else {
+    ctor.events.out_of_range();
   }
   return null;
 };
 
 Unit.tick_handlers.construct = function({ target_id: target_id }) {
   let target = this.arena.units[target_id];
-  if (!target) return this.events.no_target.call();
-  construct(this, target);
+  if (!target) return this.events.no_target();
   this.laser = construct(this, target);
 }
 
@@ -139,7 +139,7 @@ Unit.tick_handlers.move = function({ dest: dest }) {
   this.current_acceleration = this.acceleration(dest);
   this.vel = add(this.vel, this.current_acceleration);
   if (this.vel == '0,0') {
-    this.events.done.call();
+    this.events.done();
   }
 }
 
@@ -189,13 +189,13 @@ Unit.prototype.take_damage = function(attack_stats) {
 
 Unit.prototype.receive_attack_resources = function(resources) {
   this.hold = zip(this.hold, dot(resources, this.stats.Attack.Ef), this.stats.Misc.Cp).map(([h, r, c]) => min(h+r, c))
-  if (this.hold + '' === this.stats.Misc.Cp + '') this.events.hold_full.call();
+  if (this.hold + '' === this.stats.Misc.Cp + '') this.events.hold_full();
   return dot(resources, this.stats.Attack.Ef);
 }
 
 Unit.prototype.receive_mine_resources = function(resources) {
   this.hold = zip(this.hold, dot(resources, this.stats.Mine.Ef), this.stats.Misc.Cp).map(([h, r, c]) => min(h+r, c))
   console.log('just received resources, hold contains', this.hold);
-  if (this.hold + '' === this.stats.Misc.Cp + '') this.events.hold_full.call();
+  if (this.hold + '' === this.stats.Misc.Cp + '') this.events.hold_full();
   return dot(resources, this.stats.Mine.Ef);
 }
