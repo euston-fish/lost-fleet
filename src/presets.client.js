@@ -1,6 +1,6 @@
 let create_presets = (pickers) => {
   let sr = // set recursively
-    (o, p) => { p.entries().forEach(([k, v]) => typeof(val) === 'object' ? sr(o[k], v) : o[k] = v); return o; };
+    (o, p) => { p.entries().forEach(([k, v]) => typeof(v) === 'object' ? sr(o[k], v) : o[k] = v); return o; };
   Node.prototype.ac = Node.prototype.appendChild;
   Node.prototype.pc = function(n) {
     this.insertBefore(n, this.firstChild);

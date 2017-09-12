@@ -315,7 +315,7 @@ let bind_game_stuff = (socket) => {
     for (var command of commands) {
       arena.receive(command);
     }
-    arena.tick();
+    if (arena) arena.tick();
   }
 
   let command = (...args) => socket.emit('command', ['command_unit', ...args])
