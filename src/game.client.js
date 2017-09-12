@@ -109,8 +109,8 @@ let bind_game_stuff = (socket) => {
         path.forEach((pos) => ctx.lineTo(...pos));
         ctx.closePath();
       })
-      ctx.fillStyle = info.fillStyle;
-      ctx.strokeStyle = info.strokeStyle;
+      ctx.fillStyle = this.activated ? info.fillStyle : 'rgba(128, 128, 128, 0.5)';
+      ctx.strokeStyle = this.activated ? info.strokeStyle : 'rgba(128, 128, 128, 0.5)';
       ctx.lineWidth = info.lineWidth;
       if (info.fillStyle) ctx.fill();
       if (info.strokeStyle) ctx.stroke();
@@ -122,7 +122,7 @@ let bind_game_stuff = (socket) => {
     ctx.beginPath();
     ctx.circle([0,0], 5);
     ctx.closePath();
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = 'grey';
     ctx.fill();
   }
 
@@ -171,7 +171,7 @@ let bind_game_stuff = (socket) => {
       ctx.translate(...pos);
       ctx.rotate(this.rotation);
     }
-    this.draw_upper();
+    if (this.activated) this.draw_upper();
     ctx.restore();
 
     //resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
