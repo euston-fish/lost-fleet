@@ -62,5 +62,6 @@ rm -f $TARGET/!(*client.js|*server.js|*shared.js|index.html)
 
 $MINIFY $uglify_opts -- $SRC/*.js > $TARGET/shared.js
 echo '' > $TARGET/server.js
+cp $SRC/index.html $TARGET/index.html
 
 debug "complete"
