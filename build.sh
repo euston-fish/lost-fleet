@@ -3,11 +3,12 @@
 set -e
 shopt -s extglob
 
-UGLIFY=`npm bin`/uglifyjs
+MINIFY=google-closure-compiler-js
+# `npm bin`/uglifyjs
 SRC="src"
 TARGET="public"
 force=false
-uglify_opts='-b'
+uglify_opts=''
 
 while [ $# -gt 0 ]; do
   arg="$1"
@@ -56,28 +57,32 @@ debug "starting"
 mkdir -p $TARGET
 rm -f $TARGET/!(*client.js|*server.js|*shared.js|index.html)
 
-for group in shared.js client.js server.js index.html; do
-  case $group in
-    *.js)
-      sources="$SRC/*$group"
-      target="$TARGET/$group"
-      if $force || older_than $target $sources; then
-        debug "rebuilding $group"
-        $UGLIFY $uglify_opts -- $sources > $target
-      fi
-    ;;
-    *.html)
-      sources="$SRC/$group"
-      target="$TARGET/$group"
-      if $force || older_than $target -- $sources; then
-        debug "rebuilding $group"
-        cat $sources > $target
-      fi
-    ;;
-    *)
-      debug "Don't know what to do for $group, skipping..."
-    ;;
-  esac
-done
+# for group in shared.js client.js server.js index.html; do
+#   case $group in
+#     *.js)
+#       sources="$SRC/*$group"
+#       target="$TARGET/$group"
+#       if $force || older_than $target $sources; then
+#         debug "rebuilding $group"
+#         $UGLIFY $uglify_opts -- $sources > $target
+#       fi
+#     ;;
+#     *.html)
+#       sources="$SRC/$group"
+#       target="$TARGET/$group"
+#       if $force || older_than $target -- $sources; then
+#         debug "rebuilding $group"
+#         cat $sources > $target
+#       fi
+#     ;;
+#     *)
+#       debug "Don't know what to do for $group, skipping..."
+#     ;;
+#   esac
+# done
+
+$MINIFY --compilationLevel=ADVANCED $SRC/*.js > $TARGET/shared.js
+echo '' > $TARGET/client.js
+echo '' > $TARGET/server.js
 
 debug "complete"

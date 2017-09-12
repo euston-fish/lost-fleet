@@ -247,7 +247,7 @@ let bind_game_stuff = (socket) => {
   let previous_time = null;
   let draw = (time) => {
     if(previous_time) {
-      dt = time - previous_time;
+      let dt = time - previous_time;
       let scroll_dir = [0, 0];
       const arrows = [['a', [-1, 0]], ['d', [1, 0]], ['w', [0, -1]], ['s', [0, 1]]];
       arrows.forEach(([name, dir]) => {

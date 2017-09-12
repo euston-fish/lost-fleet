@@ -1,5 +1,7 @@
 const EPSILON=1;
 
+let is_server = typeof module != 'undefined';
+
 let
   min = Math.min,
   max = Math.max,

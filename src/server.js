@@ -1,6 +1,6 @@
 "use strict";
 
-(function() {
+if (is_server) (function() {
 
   // Kinda from this: https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
   let random_color = () => 'hsl(' + ((Math.random() + 0.618033988749895) * 360) % 360 + ',50%,50%)';
