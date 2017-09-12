@@ -5,6 +5,9 @@
     <title>Lost Fleet</title>
 <style>
 * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   font-family: monospace;
 }
 body {
@@ -32,6 +35,15 @@ body {
   cursor: none;
 }
 
+#picker > div:hover, #groups > span:hover, #preset_list > li:hover {
+  color: #57BEFF;
+}
+
+ul {
+  list-style-type: circle;
+  padding-left: 1em;
+}
+
 canvas {
   position: absolute;
   display: block;
@@ -56,7 +68,6 @@ button, input {
   width: 100%;
   margin-top: 5px;
   padding: 5px;
-  box-sizing: border-box;
 }
 button:active {
   color: #278DCC;
@@ -70,15 +81,30 @@ button:active {
   margin: 0 auto;
   margin-top: 30vh;
 }
+
+.labelled_input {
+  display: flex;
+  align-items: center;
+}
+
+.labelled_input > label {
+  flex: none;
+  margin-right: 5px;
+}
+
+.labelled_input > input {
+  flex: auto;
+  min-width: 0;
+}
 </style>
   </head>
   <body id="q">
     <div id="join">
-      <span>
-        Room ID: <input type="text" id="game_name">
+      <span class="labelled_input">
+        <label for="game_name">Room ID:</label><input type="text" id="game_name">
       </span>
-      <span>
-        Username: <input type="text" id="username">
+      <span class="labelled_input">
+        <label for="username">Username:</label><input type="text" id="username">
       </span>
       <button id="join_game">Join Game</button>
     </div>
@@ -95,10 +121,14 @@ button:active {
       <div id="info">
         <div id="picker" style="width:100%;height:20em"></div>
         <div id="groups"></div>
-        <div id="cost"></div>
-        <div id="resources">255,255,255</div>
-        <button id="create">Create</button>
-        <div id="selected"> </div>
+        <div id="presets">
+          <span class="labelled_input">
+            <label for="preset_name">Preset:</label><input type="text" id="preset_name"></input>
+          </span>
+        </div>
+        <div id="selected"></div>
+        <div id="resources"></div>
+        <button id="create">Create (cost <span id="cost"></span>)</button>
       </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>

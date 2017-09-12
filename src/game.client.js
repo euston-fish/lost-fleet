@@ -6,13 +6,14 @@ let bind_game_stuff = (socket) => {
   let moi = () => arena.users[me];
   let pressed_keys = {};
   let ui_state = { mode: 'NONE' };
-  let el = (id) => document.getElementById(id);
   let resource_display = el('resources');;
   let cost_display = el('cost');
   let canvas = el('c');
   let ctx = canvas.getContext('2d');
   let add_event_listener = (object, ...args) => object.addEventListener(...args);
   let w = window;
+  let pickers;
+  let presets;
 
   let game_to_screen = (game_pos, view_center_) => {
     let vc = view_center_ || view_center
@@ -31,20 +32,6 @@ let bind_game_stuff = (socket) => {
     return add(sub(screen_pos, center), vc);
   };
 
-
-  let attrs = [ { short: 'Rn', title: 'Range' }, { short: 'Pw', title: 'Power' },
-    { short: 'Ef', title: 'Efficiency' } ]; 
-  let pickers = create_pickers({ Attack: attrs, Mine: attrs, Construct: attrs, Misc: [
-      { short: 'Ac', title: 'Acceleration' },
-      { short: 'De', title: 'Defence' },
-      { short: 'Cp', title: 'Capacity' },
-      { short: 'Tr', title: 'Transfer' } ]
-  }, ['Attack', 'Mine', 'Construct', 'Misc']);
-
-  pickers.onchange = () => {
-    let stats = pickers.to_object();
-    cost_display.innerText = stats.cost.num_pretty();
-  }
 
   {
     let old_destroy = Unit.prototype.destroy;
@@ -178,8 +165,6 @@ let bind_game_stuff = (socket) => {
     ctx.restore();
 
     //resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
-    if (this.hold)
-      resource_display.innerText = this.hold.num_pretty();
   }
 
   Asteroid.prototype.draw = function() {
@@ -302,6 +287,11 @@ let bind_game_stuff = (socket) => {
           ctx.stroke();
           ctx.beginPath();
         }
+        resource_display.innerText = selected
+          .values()
+          .reduce((acc, x) => add(acc, x.hold), [0, 0])
+          .num_pretty();
+
       });
 
       if (ui_state.mode === 'CREATE') {
@@ -327,6 +317,7 @@ let bind_game_stuff = (socket) => {
     // enter create mode
     ui_state = { mode: 'CREATE' };
   };
+
 
   add_event_listener(w, 'contextmenu', (event) => event.preventDefault());
   add_event_listener(canvas, 'mousedown', (event) => cursor_location = [event.x, event.y]);
@@ -486,6 +477,21 @@ let bind_game_stuff = (socket) => {
     init_key_listeners();
     el('room').style.display = 'none';
     el('game').style.display = 'block';
+    let attrs = [ { short: 'Rn', title: 'Range' }, { short: 'Pw', title: 'Power' },
+      { short: 'Ef', title: 'Efficiency' } ]; 
+    pickers = create_pickers({ Attack: attrs, Mine: attrs, Construct: attrs, Misc: [
+        { short: 'Ac', title: 'Acceleration' },
+        { short: 'De', title: 'Defence' },
+        { short: 'Cp', title: 'Capacity' },
+        { short: 'Tr', title: 'Transfer' } ]
+    }, ['Attack', 'Mine', 'Construct', 'Misc']);
+
+    pickers.onchange = () => {
+      let stats = pickers.to_object();
+      cost_display.innerText = stats.cost.num_pretty();
+    }
+    cost_display.innerText = pickers.to_object().cost.num_pretty();
+    presets = create_presets(pickers);
     console.log(arena_);
     arena = new Arena(arena_);
     me = me_;

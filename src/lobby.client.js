@@ -1,4 +1,5 @@
 let el = (id) => document.getElementById(id);
+let ce = (tag) => document.createElement(tag);
 window.addEventListener("load", function() {
   let socket = io({ upgrade: false, transports: ['websocket'] });
 

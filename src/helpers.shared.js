@@ -88,6 +88,10 @@ Object.prototype.values = function() {
   return Object.values(this);
 }
 
+Object.prototype.entries = function() {
+  return Object.entries(this);
+}
+
 Array.prototype.sum = function() {
   return this.reduce(nums.add);
 }
