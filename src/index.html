@@ -77,7 +77,7 @@ button:active {
   white-space: nowrap;
 }
 #join, #room {
-  max-width: 400px;
+  max-width: 500px;
   margin: 0 auto;
   margin-top: 30vh;
 }
@@ -107,6 +107,30 @@ button:active {
         <label for="username">Username:</label><input type="text" id="username">
       </span>
       <button id="join_game">Join Game</button>
+      <div id="instructions">
+# Lost Fleet
+
+You are in command of a fleet of ships stranded in a hostile sector. With no backup
+available, you must gather resources from asteroids to build the strength of the fleet
+so it can defend itself in the event of encounters with hostile ships.
+
+Your mission is to ensure the safety of the fleet while eliminating all threats in the area.
+
+## Creating a game
+
+To get started in Lost Fleet, you and your friends (optional) should start a room by entering
+the same room ID. Once you have all joined, hit _Start Game_ to begin.
+
+## Controls
+
+Control your viewport using WASD, select units with left-click (hold shift or click and drag for multiple), command the selected
+units to move/ attack/ create/ mine with right-click.
+
+Pressing *E* will select *e*verything, and *space* will move the view to focus on the
+currently selected unit.
+
+      </div>
+
     </div>
     <div id="room">
       <div id="room_name"></div>
@@ -123,7 +147,7 @@ button:active {
         <div id="groups"></div>
         <div id="presets">
           <span class="labelled_input">
-            <label for="preset_name">Preset:</label><input type="text" id="preset_name"></input>
+            <label for="preset_name">Preset:</label><input type="text" id="preset_name">
           </span>
         </div>
         <div id="selected"></div>
