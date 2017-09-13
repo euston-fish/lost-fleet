@@ -29,6 +29,16 @@ body {
   color: #57BEFF;
 }
 
+.selectable:hover {
+  color: #57BEFF;
+}
+
+table {
+  width: 100%;
+  border: none;
+  border-spacing: 0;
+}
+
 ul {
   list-style-type: circle;
   padding-left: 1em;
@@ -162,11 +172,6 @@ currently selected unit.
       <div id="info">
         <div id="selected"></div>
         <div id="pcks"></div>
-        <div id="presets">
-          <span class="labelled_input">
-            <label for="preset_name">Preset:</label><input type="text" id="preset_name">
-          </span>
-        </div>
         <button id="create">Create (cost <span id="cost"></span> / <span id="cap"></span>)</button>
       </div>
     </div>

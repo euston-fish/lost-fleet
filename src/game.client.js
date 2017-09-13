@@ -387,20 +387,67 @@ let bind_game_stuff = (socket) => {
           target_id = target.get_index();
         }
       }
+      let move, construct, attack, transfer, mine;
+      move = (unit, target, range) => {
+        if(!unit || !target) return;
+        command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), 0.95*range)) });
+        unit.events.done = () => {
+          command(unit.id, 'set_command', null);
+        }
+      };
+      construct = (unit, target) => {
+        command(unit.id, 'set_command', { type: 'construct', target_id: target });
+        unit.events.out_of_range = () => {
+          move(unit, arena.units[target], unit.stats.construct.range);
+          unit.events.done = () => construct(unit, target);
+        }
+        unit.events.done = () => transfer(unit, target);
+      };
+      transfer = (unit, target) => {
+        command(unit.id, 'set_command', { type: 'transfer', target_id: target });
+        unit.events.out_of_range = () => {
+          move(unit, arena.units[target], unit.stats.misc['transfer range']);
+          unit.events.done = () => transfer(unit, target);
+        }
+        unit.events.done = () => command(unit.id, 'set_command', null);
+      };
+      attack = (unit, target) => {
+        command(unit.id, 'set_command', { type: 'attack', target_id: target });
+        unit.events.out_of_range = () => {
+          move(unit, arena.units[target], unit.stats.attack.range);
+          unit.events.done = () => attack(unit, target);
+        }
+        unit.events.done = () => command(unit.id, 'set_command', null);
+      };
+      mine = (unit, target) => {
+        command(unit.id, 'set_command', { type: 'mine', target_id: target });
+        unit.events.out_of_range = () => {
+          move(unit, arena.asteroid_field.asteroid(...target), unit.stats.mine.range);
+          unit.events.done = () => mine(unit, target);
+        }
+        unit.events.done = () => command(unit.id, 'set_command', null);
+      };
+
+
       selected.values()
         .forEach((unit) => {
           if (target) {
             if (target_type == 'unit' && target.owner.id == me) {
-              command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
+              construct(unit, target_id);
+              /*command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
               unit.events.out_of_range = () => {
                 command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), 0.95*unit.stats.construct.range)) });
                 unit.events.done = () => {
                   command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
                 };
-              }
+              };
+              unit.events.done = () => {
+                command(unit.id, 'set_command', { type: 'transfer', target_id: target_id });
+              };*/
             } else {
               if (target_type == 'unit') {
-                command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
+                attack(unit, target_id);
+                /*command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
                 //unit.events.hold_full.register(() => {
                   //alert('hold full');
                 //});
@@ -409,20 +456,22 @@ let bind_game_stuff = (socket) => {
                   unit.events.done = () => {
                     command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
                   };
-                };
+                };*/
               } else if (target_type == 'asteroid') {
-                command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
+                mine(unit, target_id);
+                /*command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
                 unit.events.out_of_range = () => {
                   command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), 0.95*unit.stats.mine.range)) });
                   unit.events.done = () => {
                     command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
                   };
-                };
+                };*/
               }
             }
           } else {
-            command(unit.id, 'set_command', { type: 'move', dest: add(screen_to_game(cursor_location), offset) });
-            unit.events.done = () => {};
+            move(unit, { pos: add(screen_to_game(cursor_location), offset) }, 0);
+            /*command(unit.id, 'set_command', { type: 'move', dest: add(screen_to_game(cursor_location), offset) });
+            unit.events.done = () => {};*/
             offset = add(offset, [36, 0]);
           }
         });
@@ -501,29 +550,35 @@ let bind_game_stuff = (socket) => {
       cost_display.innerText = new Stats(value).cost.num_pretty();
     };
     picker.set_value({
-      attack: {
-        range: 0.5,
-        power: 0.5,
-        efficiency: 0.5
-      },
-      mine: {
-        range: 0.5,
-        power: 0.5,
-        efficiency: 0.5
-      },
-      construct: {
-        range: 0.5,
-        power: 0.5,
-        efficiency: 0.5
-      },
-      misc: {
-        acceleration: 0.5,
-        capacity: 0.5,
-        defence: 0.5,
-        'transfer range': 0.5
-      }
+      attack: { range: 0.5, power: 0.5, efficiency: 0.5 },
+      mine: { range: 0.5, power: 0.5, efficiency: 0.5 },
+      construct: { range: 0.5, power: 0.5, efficiency: 0.5 },
+      misc: { acceleration: 0.5, capacity: 0.5, defence: 0.5, 'transfer range': 0.5 }
     });
-    presets = create_presets(picker);
+    picker.add_preset({ name: 'fighter', stats: {
+      attack: { range: 0.95, power: 0.95, efficiency: 0.2 },
+      mine: { range: 0, power: 0, efficiency: 0 },
+      construct: { range: 0, power: 0, efficiency: 0 },
+      misc: { acceleration: 0.8, capacity: 0, defence: 0.7, 'transfer range': 0.5 }
+    }});
+    picker.add_preset({ name: 'miner', stats: {
+      attack: { range: 0, power: 0, efficiency: 0 },
+      mine: { range: 0.95, power: 0.95, efficiency: 0.95 },
+      construct: { range: 0, power: 0, efficiency: 0 },
+      misc: { acceleration: 0.2, capacity: 0.4, defence: 0, 'transfer range': 0.5 }
+    }});
+    picker.add_preset({ name: 'builder', stats: {
+      attack: { range: 0, power: 0, efficiency: 0 },
+      mine: { range: 0, power: 0, efficiency: 0 },
+      construct: { range: 0.95, power: 0.95, efficiency: 0.95 },
+      misc: { acceleration: 0.2, capacity: 0.4, defence: 0, 'transfer range': 0.5 }
+    }});
+    picker.add_preset({ name: 'tanker', stats: {
+      attack: { range: 0, power: 0, efficiency: 0 },
+      mine: { range: 0, power: 0, efficiency: 0 },
+      construct: { range: 0, power: 0, efficiency: 0 },
+      misc: { acceleration: 0.2, capacity: 0.95, defence: 0, 'transfer range': 0.5 }
+    }});
     console.log(arena_);
     arena = new Arena(arena_);
     me = me_;
