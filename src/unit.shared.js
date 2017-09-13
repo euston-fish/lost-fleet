@@ -102,7 +102,7 @@ let attack = (attacker, defender) => {
       defender.destroy();
       attacker.events.done();
     } else if (attacker.hold === attacker.stats.misc.capacity) {
-      attacker.events.fold_full();
+      attacker.events.hold_full();
     }
     return attack_amount;
   } else {
@@ -169,6 +169,30 @@ Unit.tick_handlers.construct = function({ target_id: target_id }) {
   if (!target) return this.events.no_target();
   this.laser = construct(this, target);
 }
+
+let transfer = (tfer, tfee) => {
+  if (leng(sub(tfer.pos, tfee.pos)) < tfer.stats.misc['transfer range']) {
+    let beam_amount = min(tfer.stats.misc['transfer range']/50, tfer.hold, tfee.stats.misc.capacity - tfee.hold);
+    tfer.hold -= beam_amount;
+    tfee.hold += beam_amount;
+
+    if (tfer.hold === 0) tfer.events.done();
+    if (tfee.hold === tfee.stats.misc.capacity) {
+      tfer.events.done();
+      tfee.events.hold_full();
+    }
+    return beam_amount;
+  } else {
+    tfer.events.out_of_range();
+    return null;
+  }
+};
+
+Unit.tick_handlers.transfer = function({ target_id: target_id }) {
+  let target = this.arena.units[target_id];
+  if (!target) return this.events.no_target();
+  this.laser = transfer(this, target);
+};
 
 Unit.tick_handlers.move = function({ dest: dest }) {
   this.current_acceleration = this.acceleration(dest);

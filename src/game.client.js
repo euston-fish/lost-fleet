@@ -388,20 +388,67 @@ let bind_game_stuff = (socket) => {
           target_id = target.get_index();
         }
       }
+      let move, construct, attack, transfer, mine;
+      move = (unit, target, range) => {
+        if(!unit || !target) return;
+        command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), 0.95*range)) });
+        unit.events.done = () => {
+          command(unit.id, 'set_command', null);
+        }
+      };
+      construct = (unit, target) => {
+        command(unit.id, 'set_command', { type: 'construct', target_id: target });
+        unit.events.out_of_range = () => {
+          move(unit, arena.units[target], unit.stats.construct.range);
+          unit.events.done = () => construct(unit, target);
+        }
+        unit.events.done = () => transfer(unit, target);
+      };
+      transfer = (unit, target) => {
+        command(unit.id, 'set_command', { type: 'transfer', target_id: target });
+        unit.events.out_of_range = () => {
+          move(unit, arena.units[target], unit.stats.misc['transfer range']);
+          unit.events.done = () => transfer(unit, target);
+        }
+        unit.events.done = () => command(unit.id, 'set_command', null);
+      };
+      attack = (unit, target) => {
+        command(unit.id, 'set_command', { type: 'attack', target_id: target });
+        unit.events.out_of_range = () => {
+          move(unit, arena.units[target], unit.stats.attack.range);
+          unit.events.done = () => attack(unit, target);
+        }
+        unit.events.done = () => command(unit.id, 'set_command', null);
+      };
+      mine = (unit, target) => {
+        command(unit.id, 'set_command', { type: 'mine', target_id: target });
+        unit.events.out_of_range = () => {
+          move(unit, arena.asteroid_field.asteroid(...target), unit.stats.mine.range);
+          unit.events.done = () => mine(unit, target);
+        }
+        unit.events.done = () => command(unit.id, 'set_command', null);
+      };
+
+
       selected.values()
         .forEach((unit) => {
           if (target) {
             if (target_type == 'unit' && target.owner.id == me) {
-              command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
+              construct(unit, target_id);
+              /*command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
               unit.events.out_of_range = () => {
                 command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), 0.95*unit.stats.construct.range)) });
                 unit.events.done = () => {
                   command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
                 };
-              }
+              };
+              unit.events.done = () => {
+                command(unit.id, 'set_command', { type: 'transfer', target_id: target_id });
+              };*/
             } else {
               if (target_type == 'unit') {
-                command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
+                attack(unit, target_id);
+                /*command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
                 //unit.events.hold_full.register(() => {
                   //alert('hold full');
                 //});
@@ -410,20 +457,22 @@ let bind_game_stuff = (socket) => {
                   unit.events.done = () => {
                     command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
                   };
-                };
+                };*/
               } else if (target_type == 'asteroid') {
-                command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
+                mine(unit, target_id);
+                /*command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
                 unit.events.out_of_range = () => {
                   command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), 0.95*unit.stats.mine.range)) });
                   unit.events.done = () => {
                     command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
                   };
-                };
+                };*/
               }
             }
           } else {
-            command(unit.id, 'set_command', { type: 'move', dest: add(screen_to_game(cursor_location), offset) });
-            unit.events.done = () => {};
+            move(unit, { pos: add(screen_to_game(cursor_location), offset) }, 0);
+            /*command(unit.id, 'set_command', { type: 'move', dest: add(screen_to_game(cursor_location), offset) });
+            unit.events.done = () => {};*/
             offset = add(offset, [36, 0]);
           }
         });
