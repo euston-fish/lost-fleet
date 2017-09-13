@@ -55,8 +55,7 @@ function Asteroid(field, { block: block,
   let rng = new RNG(field.x_coefficient*block[0] + field.y_coefficient*block[1] + field.i_coefficient*index);
   this.pos= [this.block[0]*this.field.block_size+mix(rng.random(), 0, field.block_size),
                    this.block[1]*this.field.block_size+mix(rng.random(), 0, field.block_size)];
-  let emphasis = (this.block[0] + this.block[1]) % 2;
-  this.stats = [0, 0].map((_, idx) => mix(rng.random(), idx == emphasis ? 1400 : 0, idx == emphasis ? 2550 : 1800));
+  this.stats = mix(rng.random(), 1400, 2550);
   this.shape_id = Math.round(rng.random()*Asteroid.asteroid_shapes.length-0.5);
   this.rotation = rng.random()*2*Math.PI;
 }
@@ -83,7 +82,7 @@ Asteroid.prototype.get_index = function() {
 }
 
 Asteroid.prototype.size = function() {
-  return this.stats.reduce(nums.add, 0) / 100;
+  return this.stats / 100;
 }
 
 Asteroid.prototype.shape = function() {
@@ -114,13 +113,6 @@ Asteroid.prototype.point_in = function(point) {
 }
 
 // Minable things
-
-Asteroid.prototype.take_damage = function(mine_stats) {
-  let damage = zip(mine_stats, this.stats).map(([d, v]) => min(d, v));
-  this.stats = zip(this.stats, damage).map(([s, d]) => s-d);
-  if (this.stats == '0,0') this.destroy();
-  return damage;
-}
 
 Asteroid.prototype.destroy = function() {
   delete this.field.block(...this.block)[this.index];

@@ -12,7 +12,7 @@ let bind_game_stuff = (socket) => {
   let ctx = canvas.getContext('2d');
   let add_event_listener = (object, ...args) => object.addEventListener(...args);
   let w = window;
-  let pickers;
+  let picker;
   let presets;
 
   let game_to_screen = (game_pos, view_center_) => {
@@ -185,7 +185,7 @@ let bind_game_stuff = (socket) => {
     ctx.moveTo(...game_to_screen(this.shape()[0]));
     this.shape().forEach((pos) => ctx.lineTo(...game_to_screen(pos)))
     ctx.closePath();
-    let shade = Math.floor(this.stats.reduce(nums.add, 0) / 20);
+    let shade = Math.floor(this.stats / 20);
     let inverse = 255 - shade;
     ctx.fillStyle = 'rgb(' + [shade, shade, shade] + ')';
     ctx.strokeStyle = 'rgb(' + [inverse, inverse, inverse] + ')';
@@ -299,7 +299,7 @@ let bind_game_stuff = (socket) => {
         }
         resource_display.innerText = selected
           .values()
-          .reduce((acc, x) => add(acc, x.hold), [0, 0])
+          .reduce((acc, x) => acc + x.hold, 0)
           .num_pretty();
 
       });
@@ -362,7 +362,7 @@ let bind_game_stuff = (socket) => {
     } else if (ui_state.mode === 'PAN') {
       ui_state = { mode: 'NONE' };
     } else if (ui_state.mode === 'CREATE') {
-      make_baby(screen_to_game(cursor_location), pickers.to_object().serialize());
+      make_baby(screen_to_game(cursor_location), picker.get_value());
     } else if (event.button === 2) {
       let offset = [0, 0];
       let target_id;
@@ -391,7 +391,7 @@ let bind_game_stuff = (socket) => {
             if (target_type == 'unit' && target.owner.id == me) {
               command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
               unit.events.out_of_range = () => {
-                command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.stats.Construct.Rn)) });
+                command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), 0.95*unit.stats.construct.range)) });
                 unit.events.done = () => {
                   command(unit.id, 'set_command', { type: 'construct', target_id: target_id });
                 };
@@ -403,7 +403,7 @@ let bind_game_stuff = (socket) => {
                   //alert('hold full');
                 //});
                 unit.events.out_of_range = () => {
-                  command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.stats.Attack.Rn)) });
+                  command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), 0.95*unit.stats.attack.range)) });
                   unit.events.done = () => {
                     command(unit.id, 'set_command', { type: 'attack', target_id: target_id });
                   };
@@ -411,7 +411,7 @@ let bind_game_stuff = (socket) => {
               } else if (target_type == 'asteroid') {
                 command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
                 unit.events.out_of_range = () => {
-                  command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), unit.stats.Mine.Rn)) });
+                  command(unit.id, 'set_command', { type: 'move', dest: add(target.pos, scale(norm(sub(unit.pos, target.pos)), 0.95*unit.stats.mine.range)) });
                   unit.events.done = () => {
                     command(unit.id, 'set_command', { type: 'mine', target_id: target_id });
                   };
@@ -433,14 +433,6 @@ let bind_game_stuff = (socket) => {
     c: create_button.onclick,
     // TODO: reimplement deletion
     " ": () =>  { if (selected.values()[0]) view_center = selected.values()[0].pos; },
-    Tab: (event) => {
-      event.preventDefault();
-      pickers.select_in_n(1)();
-    },
-    "S-Tab": (event) => {
-      event.preventDefault();
-      pickers.select_in_n(-1)();
-    },
     Escape: (event) => {
       event.preventDefault();
       ui_state = { mode: 'NONE' };
@@ -493,19 +485,41 @@ let bind_game_stuff = (socket) => {
     el('game').style.display = 'block';
     let attrs = [ { short: 'Rn', title: 'Range' }, { short: 'Pw', title: 'Power' },
       { short: 'Ef', title: 'Efficiency' } ]; 
-    pickers = create_pickers({ Attack: attrs, Mine: attrs, Construct: attrs, Misc: [
-        { short: 'Ac', title: 'Acceleration' },
-        { short: 'De', title: 'Defence' },
-        { short: 'Cp', title: 'Capacity' },
-        { short: 'Tr', title: 'Transfer' } ]
-    }, ['Attack', 'Mine', 'Construct', 'Misc']);
-
-    pickers.onchange = () => {
-      let stats = pickers.to_object();
-      cost_display.innerText = stats.cost.num_pretty();
-    }
-    cost_display.innerText = pickers.to_object().cost.num_pretty();
-    presets = create_presets(pickers);
+    picker = make_picker([
+      { name: 'attack', stats: ['range', 'power', 'efficiency'] },
+      { name: 'mine', stats: ['range', 'power', 'efficiency'] },
+      { name: 'construct', stats: ['range', 'power', 'efficiency'] },
+      { name: 'misc', stats: ['acceleration', 'capacity', 'defence', 'transfer range'] }
+    ]);
+    el('info').insertBefore(picker.element, el('info').firstChild);
+    picker.onchange = (value) => {
+      console.log(value);
+      cost_display.innerText = new Stats(value).cost.num_pretty();
+    };
+    picker.set_value({
+      attack: {
+        range: 0.5,
+        power: 0.5,
+        efficiency: 0.5
+      },
+      mine: {
+        range: 0.5,
+        power: 0.5,
+        efficiency: 0.5
+      },
+      construct: {
+        range: 0.5,
+        power: 0.5,
+        efficiency: 0.5
+      },
+      misc: {
+        acceleration: 0.5,
+        capacity: 0.5,
+        defence: 0.5,
+        'transfer range': 0.5
+      }
+    });
+    presets = create_presets(picker);
     console.log(arena_);
     arena = new Arena(arena_);
     me = me_;

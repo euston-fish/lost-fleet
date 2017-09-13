@@ -10,32 +10,34 @@ let Stats;
     //console.log(typeof(norm_stats));
     //console.log(norm_stats);
     this.norm_stats = norm_stats;
-    this.Attack = {
-      Rn: leng(Array.prototype.map.call(norm_stats.Attack.Rn, (v) => 60*norm_scaled_value(v))),
-      Pw: Array.prototype.map.call(norm_stats.Attack.Pw, (v) => 5*norm_scaled_value(v)),
-      Ef: Array.prototype.map.call(norm_stats.Attack.Ef, (v) => norm_unscaled_value(0.1*norm_scaled_value(v)))
-    };
-    this.Mine = {
-      Rn: leng(Array.prototype.map.call(norm_stats.Mine.Rn, (v) => 80*norm_scaled_value(v))),
-      Pw: Array.prototype.map.call(norm_stats.Mine.Pw, (v) => 7*norm_scaled_value(v)),
-      Ef: Array.prototype.map.call(norm_stats.Mine.Ef, (v) => norm_unscaled_value(30*norm_scaled_value(v)))
-    };
-    this.Construct = {
-      Rn: leng(Array.prototype.map.call(norm_stats.Construct.Rn, (v) => 30*norm_scaled_value(v))),
-      Pw: Array.prototype.map.call(norm_stats.Construct.Pw, (v) => 4*norm_scaled_value(v)),
-      Ef: Array.prototype.map.call(norm_stats.Construct.Ef, (v) => norm_unscaled_value(40*norm_scaled_value(v)))
-    };
-    this.Misc = {
-      Ac: leng(Array.prototype.map.call(norm_stats.Misc.Ac, (v) => norm_scaled_value(v))),
-      De: Array.prototype.map.call(norm_stats.Misc.De, (v) => norm_unscaled_value(3*norm_scaled_value(v))),
-      Cp: Array.prototype.map.call(norm_stats.Misc.Cp, (v) => 300*norm_scaled_value(v)),
-      Tr: leng(Array.prototype.map.call(norm_stats.Misc.Cp, (v) => 70*norm_scaled_value(v)))
+    this.attack = {
+      range: 60*norm_scaled_value(norm_stats.attack.range),
+      power: 5*norm_scaled_value(norm_stats.attack.power),
+      efficiency: norm_unscaled_value(0.1*norm_scaled_value(norm_stats.attack.efficiency)),
     }
-    this.cost = Object.values(norm_stats).map((group) =>
-      Object.values(group).map((values) =>
-        Array.prototype.map.call(values, (value) => 20*norm_scaled_value(value))
-      ).reduce(add)
-    ).reduce(add);
+    this.mine = {
+      range: 80*norm_scaled_value(norm_stats.mine.range),
+      power: 7*norm_scaled_value(norm_stats.mine.power),
+      efficiency: norm_unscaled_value(30*norm_scaled_value(norm_stats.mine.efficiency)),
+    }
+    this.construct = {
+      range: 30*norm_scaled_value(norm_stats.construct.range),
+      power: 4*norm_scaled_value(norm_stats.construct.power),
+      efficiency: norm_unscaled_value(40*norm_scaled_value(norm_stats.construct.efficiency)),
+    }
+    this.misc = {
+      acceleration: norm_scaled_value(norm_stats.misc.acceleration),
+      capacity: 300*norm_scaled_value(norm_stats.misc.capacity),
+      defence: norm_unscaled_value(3*norm_scaled_value(norm_stats.misc.defence)),
+      'transfer range': 70*norm_scaled_value(norm_stats.misc['transfer range']),
+    }
+    this.cost = 100 * norm_stats.attack.range * norm_stats.attack.power * (norm_stats.attack.efficiency + 1) +
+                100 * norm_stats.mine.range * norm_stats.mine.power * norm_stats.mine.efficiency +
+                100 * norm_stats.construct.range * norm_stats.construct.power * norm_stats.construct.efficiency +
+                100 * norm_stats.misc.acceleration +
+                100 * norm_stats.misc.capacity +
+                100 * norm_stats.misc.defence +
+                100 * norm_stats.misc['transfer range'];
   }
 
   Stats.prototype.serialize = function() {
