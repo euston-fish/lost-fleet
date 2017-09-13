@@ -13,29 +13,29 @@ if (is_server) (function() {
   let start_game = (players) => {
     console.log('starting game...'); 
 
-    let mothership_stats = new Stats({
-      Attack: {
-        Rn: [0.7, 0.7],
-        Pw: [0.7, 0.7],
-        Ef: [0.7, 0.7]
+    let mothership_stats = {
+      attack: {
+        range: 0.7,
+        power: 0.7,
+        efficiency: 0.7
       },
-      Mine: {
-        Rn: [0.7, 0.7],
-        Pw: [0.7, 0.7],
-        Ef: [0.7, 0.7]
+      mine: {
+        range: 0.7,
+        power: 0.7,
+        efficiency: 0.7
       },
-      Construct: {
-        Rn: [0.7, 0.7],
-        Pw: [0.7, 0.7],
-        Ef: [0.7, 0.7]
+      construct: {
+        range: 0.7,
+        power: 0.7,
+        efficiency: 0.7
       },
-      Misc: {
-        Ac: [0.7, 0.7],
-        De: [0.7, 0.7],
-        Cp: [0.7, 0.7],
-        Tr: [0.7, 0.7]
+      misc: {
+        acceleration: 0.7,
+        capacity: 0.7,
+        defence: 0.7,
+        'transfer range': 0.7
       }
-    });
+    };
     console.log(mothership_stats);
     
     let arena = new Arena({
@@ -47,7 +47,7 @@ if (is_server) (function() {
           color: random_color(),
           username: client.username,
           units: [
-            { pos: pos, vel: [0, 0], stats: mothership_stats.serialize(), health: mothership_stats.cost, activated: true }
+            { pos: pos, vel: [0, 0], stats: mothership_stats, health: new Stats(mothership_stats).cost, activated: true }
           ]
         }
       }),

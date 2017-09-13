@@ -58,6 +58,10 @@ Array.prototype.num_pretty = function() {
   return this.map(v => Math.floor(v)).join(', ')
 }
 
+Number.prototype.num_pretty = function() {
+  return Math.floor(this);
+}
+
 function in_rounded_rectangle(point, radius, corner_a, corner_b) {
   if(!corner_b) corner_b = corner_a;
   let t = min(corner_a[1], corner_b[1]),
