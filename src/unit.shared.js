@@ -23,7 +23,7 @@ function Unit(arena, { id: id,
   this.activated = activated || false;
 
   this.command = null;
-  this.shape_id = 1;
+  this.shape_id = this.calc_ship_id();
   this.rotation = scalar_angle(this.vel);
 
   this.events = {
@@ -32,6 +32,15 @@ function Unit(arena, { id: id,
     no_target: () => {},
     done: () => {}
   };
+}
+
+Unit.prototype.calc_ship_id = function() {
+  // FIXME I don't work on scalar values
+  if (this.stats.misc.acceleration < 3) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 Unit.prototype.destroy = function() {
@@ -60,9 +69,12 @@ Unit.prototype.receive = function(command, ...params) {
 // These properties are based on the unit's stats
 
 Unit.prototype.radius = function () {
-  // TODO: make less powerful units smaller?
-  // (currently it's just the unit's health that determines size)
-  return mix(this.health/this.stats.cost, 8, 15);
+  return mix(this.stats.misc.defence, 8, 15);
+}
+
+Unit.prototype.health_color = function() {
+  if (!this.health) return '';
+  return 'hsl(' + mix(this.health / this.stats.cost, 0, 140)+ ',80%,50%)';
 }
 
 /// Tick handling ///
@@ -201,17 +213,4 @@ Unit.prototype.acceleration = function(dest) {
     return scale(norm(inv(this.vel)), Math.min(max_accel, leng(this.vel)));
   }
   */
-}
-
-Unit.prototype.take_damage = function(attack_stats) {
-  let damage = zip(dot(attack_stats, this.stats.Misc.De.map((d) => 1-d)), this.health).map(([d, v]) => min(d, v));
-  this.health = zip(this.health, damage).map(([s, d]) => s-d);
-  if(this.health == '0,0') this.destroy();
-  return damage;
-}
-
-Unit.prototype.receive_attack_resources = function(resources) {
-  this.hold = zip(this.hold, dot(resources, this.stats.Attack.Ef), this.stats.Misc.Cp).map(([h, r, c]) => min(h+r, c))
-  if (this.hold + '' === this.stats.Misc.Cp + '') this.events.hold_full();
-  return dot(resources, this.stats.Attack.Ef);
 }

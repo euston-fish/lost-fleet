@@ -94,6 +94,7 @@ if (is_server) (function() {
     clients[client.socket.id] = client;
 
     socket.on('create_game', (name, username) => {
+      name = name.toLowerCase();
       if (!waiting[name]) {
         waiting[name] = {};
       }

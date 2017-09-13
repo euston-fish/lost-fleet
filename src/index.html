@@ -17,25 +17,7 @@ body {
   user-select: none;
   color: white;
 }
-#picker > div {
-  width: 1em;
-  height: 1em;
-  border-top: 1px solid #eee;
-  border-left: 1px solid #eee;
-  background: #312769;
-  padding: 3px;
-}
 .selected {
-  color: #57BEFF;
-}
-#picker {
-  margin-bottom: 10px;
-}
-#picker .selected {
-  cursor: none;
-}
-
-#picker > div:hover, #groups > span:hover, #preset_list > li:hover {
   color: #57BEFF;
 }
 
@@ -178,14 +160,6 @@ currently selected unit.
       <canvas id="mid_stars"></canvas>
       <canvas id="near_stars"></canvas>
       <canvas id="c"></canvas>
-      <style>
-      #picker {
-      }
-      #picker > ul {
-        display: table;
-      }
-      #picker > ul > 
-      </style>
       <div id="info">
         <button id="create">Create (cost <span id="cost"></span>)</button>
         <div id="selected"></div>
