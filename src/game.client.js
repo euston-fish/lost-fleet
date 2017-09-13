@@ -13,7 +13,6 @@ let bind_game_stuff = (socket) => {
   let add_event_listener = (object, ...args) => object.addEventListener(...args);
   let w = window;
   let picker;
-  let presets;
 
   let game_to_screen = (game_pos, view_center_) => {
     let vc = view_center_ || view_center
@@ -497,29 +496,35 @@ let bind_game_stuff = (socket) => {
       cost_display.innerText = new Stats(value).cost.num_pretty();
     };
     picker.set_value({
-      attack: {
-        range: 0.5,
-        power: 0.5,
-        efficiency: 0.5
-      },
-      mine: {
-        range: 0.5,
-        power: 0.5,
-        efficiency: 0.5
-      },
-      construct: {
-        range: 0.5,
-        power: 0.5,
-        efficiency: 0.5
-      },
-      misc: {
-        acceleration: 0.5,
-        capacity: 0.5,
-        defence: 0.5,
-        'transfer range': 0.5
-      }
+      attack: { range: 0.5, power: 0.5, efficiency: 0.5 },
+      mine: { range: 0.5, power: 0.5, efficiency: 0.5 },
+      construct: { range: 0.5, power: 0.5, efficiency: 0.5 },
+      misc: { acceleration: 0.5, capacity: 0.5, defence: 0.5, 'transfer range': 0.5 }
     });
-    presets = create_presets(picker);
+    picker.add_preset({ name: 'fighter', stats: {
+      attack: { range: 0.95, power: 0.95, efficiency: 0.2 },
+      mine: { range: 0, power: 0, efficiency: 0 },
+      construct: { range: 0, power: 0, efficiency: 0 },
+      misc: { acceleration: 0.8, capacity: 0, defence: 0.7, 'transfer range': 0.5 }
+    }});
+    picker.add_preset({ name: 'miner', stats: {
+      attack: { range: 0, power: 0, efficiency: 0 },
+      mine: { range: 0.95, power: 0.95, efficiency: 0.95 },
+      construct: { range: 0, power: 0, efficiency: 0 },
+      misc: { acceleration: 0.2, capacity: 0.4, defence: 0, 'transfer range': 0.5 }
+    }});
+    picker.add_preset({ name: 'builder', stats: {
+      attack: { range: 0, power: 0, efficiency: 0 },
+      mine: { range: 0, power: 0, efficiency: 0 },
+      construct: { range: 0.95, power: 0.95, efficiency: 0.95 },
+      misc: { acceleration: 0.2, capacity: 0.4, defence: 0, 'transfer range': 0.5 }
+    }});
+    picker.add_preset({ name: 'tanker', stats: {
+      attack: { range: 0, power: 0, efficiency: 0 },
+      mine: { range: 0, power: 0, efficiency: 0 },
+      construct: { range: 0, power: 0, efficiency: 0 },
+      misc: { acceleration: 0.2, capacity: 0.95, defence: 0, 'transfer range': 0.5 }
+    }});
     console.log(arena_);
     arena = new Arena(arena_);
     me = me_;

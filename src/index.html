@@ -39,6 +39,15 @@ body {
   color: #57BEFF;
 }
 
+.selectable:hover {
+  color: #57BEFF;
+}
+
+table {
+  border: none;
+  border-spacing: 0;
+}
+
 ul {
   list-style-type: circle;
   padding-left: 1em;
@@ -178,14 +187,9 @@ currently selected unit.
       #picker > ul > 
       </style>
       <div id="info">
-        <div id="presets">
-          <span class="labelled_input">
-            <label for="preset_name">Preset:</label><input type="text" id="preset_name">
-          </span>
-        </div>
+        <button id="create">Create (cost <span id="cost"></span>)</button>
         <div id="selected"></div>
         <div id="resources"></div>
-        <button id="create">Create (cost <span id="cost"></span>)</button>
       </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
