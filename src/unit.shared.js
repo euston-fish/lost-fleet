@@ -159,7 +159,9 @@ let construct = (ctor, ctee) => {
     if (health_remaining == 0) ctor.events.done();
     return health_added;
   } else {
-    ctor.events.out_of_range();
+    let health_remaining = ctee.stats.cost - ctee.health;
+    if (health_remaining == 0) ctor.events.done();
+    else ctor.events.out_of_range();
   }
   return null;
 };
