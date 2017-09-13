@@ -1,40 +1,36 @@
-# Untitled
+# Lost Fleet
 
-[![build status](https://gitlab.com/javanut13/13k/badges/master/build.svg)](https://gitlab.com/javanut13/13k/commits/master)
-[![coverage report](https://gitlab.com/javanut13/13k/badges/master/coverage.svg)](https://gitlab.com/javanut13/13k/commits/master)
+_A game for [js13kGames](http://js13kgames.com) 2017_
 
-Game server for the [js13kGames Competition](http://js13kgames.com/).
+[Play it now](http://lost-fleet.herokuapp.com)
 
-## Install
+You are in command of a fleet of ships stranded in a hostile sector. With no backup
+available, you must gather resources from asteroids to build the strength of the fleet
+so it can defend itself in the event of encounters with hostile ships.
 
-[Download](https://github.com/js13kgames/js13kserver/archive/master.zip) the skeleton.
-Extract the files and install the third party libraries with `npm`. 
+Your mission is to ensure the safety of the fleet while eliminating all threats in the area.
 
-    npm install
+### Creating a game
 
-## Runinng
+To get started in Lost Fleet, you and your friends (optional) should start a room by entering
+the same room ID. Once you have all joined, hit _Start Game_ to begin.
 
-You can run the server locally with the following command:
+### Controls
 
-    npm start
+Control your viewport using WASD, select units with left-click (hold shift or click and drag for multiple), command the selected
+units to move/ attack/ create/ mine with right-click.
 
-You can reach the test server at [http://localhost:3000](http://localhost:3000)
+Pressing *E* will select *e*verything, and *space* will move the view to focus on the
+currently selected unit.
 
-## Code structure
+## Self-Install & Run
 
-All your code must be in the `public` folder. Put your server side code into 
-the `server.js` file. The `shared.js` file is loaded at the begining of the
-`server.js` file. You can also use this code on the client side.
+You can build and serve your own version of Lost Fleet:
 
-## Deploy to Heroku
+```shell
+git clone https://github.com/euston-fish/lost-fleet.git
+npm install
+npm start
+```
 
-1. Push your files to your GitHub repository
-2. Create new WebApp on heroku
-3. Connect your WebApp with the GitHub repository
-4. Deploy your code 
-
-## Submit your entry
-
-1. Zip all files in the `public` folder.
-2. Submit your entry on the [js13kgames.com](http://js13kgames.com) site.
-3. Add [contact@js13kgames.com](mailto:contact@js13kgames.com) games as collaborator to your Heroku WebApp.
+Then navigate to `http://localhost:3000`
