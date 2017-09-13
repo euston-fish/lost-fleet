@@ -15,7 +15,7 @@ function make_picker(groups) {
       let tr = table.ac(ce('tr'));
       let label = tr.ac(ce('td').sr({ innerText: name }));
       let range = tr.ac(ce('input').sr({ type: 'range', min: '0', max: '1', step: 'any' }));
-      range.addEventListener('change', () => picker.onchange(picker.get_value()));
+      range.addEventListener('input', () => picker.onchange(picker.get_value()));
       return {
         name: name,
         get_value = () => parseFloat(range.value),

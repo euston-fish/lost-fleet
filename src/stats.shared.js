@@ -4,11 +4,6 @@ let Stats;
   let norm_unscaled_value = (value) => (1-1/(value+1));
 
   Stats = function(norm_stats) {
-    //console.log(Object.getPrototypeOf(norm_stats));
-    //console.log(Object.prototype);
-    //console.log(Object.getPrototypeOf({}));
-    //console.log(typeof(norm_stats));
-    //console.log(norm_stats);
     this.norm_stats = norm_stats;
     this.attack = {
       range: 60*norm_scaled_value(norm_stats.attack.range),
