@@ -39,10 +39,17 @@ function make_picker(groups) {
   });
   let presets = [];
   let preset_table = el.ac(ce('table'));
+  let presets_expanded = true;
   let draw_presets = () => {
     while (preset_table.hasChildNodes()) preset_table.removeChild(preset_table.lastChild);
     let tr = preset_table.ac(ce('tr'));
-    let th = tr.ac(ce('th').sr({ colSpan: '2', innerText: 'presets' }));
+    let th = tr.ac(ce('th').sr({ colSpan: '2', innerText: 'presets ' + (presets_expanded ? '▼' : '▲') }));
+    th.cc('selectable');
+    th.onclick = () => {
+      presets_expanded = !presets_expanded;
+      draw_presets();
+    };
+    if (!presets_expanded) return;
     presets.forEach((preset) => {
       let name = ce('td').sr({ style: { width: '100%' }, innerText: preset.name });
       name.cc('selectable');
