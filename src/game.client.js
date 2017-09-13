@@ -6,13 +6,13 @@ let bind_game_stuff = (socket) => {
   let moi = () => arena.users[me];
   let pressed_keys = {};
   let ui_state = { mode: 'NONE' };
-  let resource_display = el('resources');;
   let cost_display = el('cost');
+  let capacity_display = el('cap');
   let canvas = el('c');
   let ctx = canvas.getContext('2d');
   let add_event_listener = (object, ...args) => object.addEventListener(...args);
   let w = window;
-  let picker;
+  let picker, selecteder;
   let presets;
 
   let game_to_screen = (game_pos, view_center_) => {
@@ -301,16 +301,14 @@ let bind_game_stuff = (socket) => {
           ctx.stroke();
           ctx.beginPath();
         }
-        resource_display.innerText = selected
-          .values()
-          .reduce((acc, x) => acc + x.hold, 0)
-          .num_pretty();
-
       });
 
       if (ui_state.mode === 'CREATE') {
         Object.setPrototypeOf({ owner: { color: 'rgba(255, 255, 255, 0.5)' }, rotation: Math.PI/2, pos: screen_to_game(cursor_location), radius: () => 15, shape_id: 1 }, Unit.prototype).draw();
       }
+      selecteder.update(selected);
+      let capacity = (selected.values() || []).map((unit) => unit.hold).reduce(nums.add, 0);
+      capacity_display.innerText = Math.floor(capacity);
     }
     window.requestAnimationFrame(draw);
   }
@@ -489,13 +487,15 @@ let bind_game_stuff = (socket) => {
     el('game').style.display = 'block';
     let attrs = [ { short: 'Rn', title: 'Range' }, { short: 'Pw', title: 'Power' },
       { short: 'Ef', title: 'Efficiency' } ]; 
-    picker = make_picker([
+    let picker_vals = [
       { name: 'attack', stats: ['range', 'power', 'efficiency'] },
       { name: 'mine', stats: ['range', 'power', 'efficiency'] },
       { name: 'construct', stats: ['range', 'power', 'efficiency'] },
       { name: 'misc', stats: ['acceleration', 'capacity', 'defence', 'transfer range'] }
-    ]);
-    el('info').insertBefore(picker.element, el('info').firstChild);
+    ];
+    picker = make_picker(picker_vals);
+    el('pcks').appendChild(picker.element);
+    selecteder = create_selected_stats(el('selected'), picker_vals);
     picker.onchange = (value) => {
       console.log(value);
       cost_display.innerText = new Stats(value).cost.num_pretty();

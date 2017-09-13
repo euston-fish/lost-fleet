@@ -9,7 +9,7 @@ TARGET="public"
 force=false
 uglify_opts=''
 
-SPECIFIC='Rn,Pw,Ef,Ac,De,Cp,Tr,Attack,Mine,Construct,Misc,command_unit,make_baby,move,attack,mine,construct,set_command,flames,body,Escape,Tab'
+SPECIFIC='acceleration,defence,capacity,power,range,efficiency,misc,command_unit,make_baby,move,attack,mine,construct,set_command,flames,body,Escape,Tab'
 RESERVED="io,on,upgrade,transports,module,exports,emit,arena,$SPECIFIC"
 
 
@@ -19,7 +19,8 @@ while [ $# -gt 0 ]; do
 
   case $arg in
     -m|--minify)
-      uglify_opts="-c -m reserved=[$RESERVED] --mangle-props reserved=[$RESERVED]"
+      # reserved=[$RESERVED] --mangle-props reserved=[$RESERVED]"
+      uglify_opts="-c -m "
     ;;
     -d|--debug)
       uglify_opts='-b'
