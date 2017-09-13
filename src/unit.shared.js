@@ -23,7 +23,7 @@ function Unit(arena, { id: id,
   this.activated = activated || false;
 
   this.command = null;
-  this.shape_id = 1;
+  this.shape_id = this.calc_ship_id();
   this.rotation = scalar_angle(this.vel);
 
   this.events = {
@@ -32,6 +32,15 @@ function Unit(arena, { id: id,
     no_target: () => {},
     done: () => {}
   };
+}
+
+Unit.prototype.calc_ship_id = function() {
+  // FIXME I don't work on scalar values
+  if (this.stats.Misc.Ac < 3) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 Unit.prototype.destroy = function() {
@@ -60,9 +69,16 @@ Unit.prototype.receive = function(command, ...params) {
 // These properties are based on the unit's stats
 
 Unit.prototype.radius = function () {
-  // TODO: make less powerful units smaller?
-  // (currently it's just the unit's health that determines size)
-  return mix(leng(this.health)/leng(this.stats.cost), 8, 15);
+  // FIXME scalar
+  return mix(this.stats.Misc.De[0], 8, 15);
+}
+
+// From https://stackoverflow.com/questions/17525215
+Unit.prototype.health_color = function() {
+  if (!this.health) return '';
+  // FIXME Fix for scalar health and stuff
+  let hue = Math.floor((this.health[0] / this.stats.cost[0]) * 12000 / 360);
+  return 'hsl(' + hue + ',80%,50%)';
 }
 
 /// Tick handling ///
@@ -106,9 +122,6 @@ Unit.tick_handlers.mine = function({ target_id: target_id }) {
 let construct = (ctor, ctee) => {
   if (leng(sub(ctor.pos, ctee.pos)) < ctor.stats.Construct.Rn) {
     // The max amount that could be transferred from the ctor
-    console.log(typeof(ctor.stats.Construct.Pw));
-    console.log(Array.prototype);
-    console.log(ctor.stats.Construct.Pw.zip);
     let beam_amount = ctor.stats.Construct.Pw
       .zip(ctor.hold)
       .map((l) => min(...l))
@@ -195,7 +208,6 @@ Unit.prototype.receive_attack_resources = function(resources) {
 
 Unit.prototype.receive_mine_resources = function(resources) {
   this.hold = zip(this.hold, dot(resources, this.stats.Mine.Ef), this.stats.Misc.Cp).map(([h, r, c]) => min(h+r, c))
-  console.log('just received resources, hold contains', this.hold);
   if (this.hold + '' === this.stats.Misc.Cp + '') this.events.hold_full();
   return dot(resources, this.stats.Mine.Ef);
 }

@@ -58,40 +58,48 @@ let bind_game_stuff = (socket) => {
   }
 
   let scale_path = (rate, ...path) => path.map(([x, y]) => [rate * x, rate * y]);
-  let let_path = (...args) => (func) => func(...args);
 
   let ship_shapes = [
     (unit) => [{
       body: {
         fillStyle: unit.owner.color,
-        strokeStyle: selected[unit.id] ? 'orange' : 'grey',
+        strokeStyle: unit.health_color(),
         lineWidth: 3,
         paths: [scale_path(unit.radius(), [0, -1], [1, 1], [-1, 1])]
       },
       flames: {
         fillStyle: 'orange',
         paths: [
-          let_path(unit.radius(),
-            leng(unit.current_acceleration || [0,0]) * 7
-          )((r, s) => [[0, r + s], [r / 2, r], [-r / 2, r]])
+          ((r, s) => [[0, r + s], [r / 2, r], [-r / 2, r]])(unit.radius(),
+            leng(unit.current_acceleration || [0,0]) * 7)
         ]
+      },
+      selected: {
+        paths: selected[unit.id] ? [scale_path(unit.radius() * 1.8, [0, -1], [1, 0.8], [-1, 0.8])] : [],
+        strokeStyle: 'orange',
+        lineWidth: 1
       }
     }],
     (unit) => [{
       body: {
         fillStyle: unit.owner.color,
-        strokeStyle: selected[unit.id] ? 'orange' : 'grey',
+        strokeStyle: unit.health_color(),
         lineWidth: 3,
         paths: [scale_path(unit.radius(), [0, -1], [1, 1], [-1, 1])]
       },
       flames: {
-        fillStyle: 'orange',
-        paths: let_path(unit.radius(), leng(unit.current_acceleration || [0,0]) * 7)(
-          (r, s) => [
-            [[3, r], [3 + r / 2, r + s], [r - 3, r]],
-            [[-3, r], [-r / 2 - 3, r + s], [-r + 3, r]]
-          ]
-        )
+        fillStyle: '#FF8400',
+        strokeStyle: '#FFC400',
+        lineWidth: 3,
+        paths: ((r, s) => [
+          [[3, r], [3 + r / 2, r + s], [r - 3, r]],
+          [[-3, r], [-r / 2 - 3, r + s], [-r + 3, r]]
+        ])(unit.radius(), leng(unit.current_acceleration || [0,0]) * 7)
+      },
+      selected: {
+        paths: selected[unit.id] ? [scale_path(unit.radius() * 1.8, [0, -1], [1, 0.8], [-1, 0.8])] : [],
+        strokeStyle: 'orange',
+        lineWidth: 1
       }
     }]
   ]
@@ -99,7 +107,7 @@ let bind_game_stuff = (socket) => {
   // Draw base of ship, below any lasers
   Unit.prototype.draw_lower = function() {
     let ship_shape = ship_shapes[this.shape_id](this)[0];
-    ['flames', 'body'].forEach((component) => {
+    ['flames', 'body', 'selected'].forEach((component) => {
       let info = ship_shape[component];
       // Exit early if no info for component
       if (!info) return;
@@ -136,45 +144,41 @@ let bind_game_stuff = (socket) => {
     let other;
     if (this.command) {
       ctx.restore();
-      if (this.command.type === 'attack') {
-        let target = this.arena.units[this.command.target_id];
-        if (target && this.laser) {
-          ctx.strokeStyle = 'rgb('+this.laser+')';
+      if (this.laser) {
+        let target;
+        switch (this.command.type) {
+          case 'attack':
+            target = this.arena.units[this.command.target_id];
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#CF4800';
+            break;
+          case 'mine':
+            target = this.arena.asteroid_field.asteroid(...this.command.target_id);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#0087CF';
+            break;
+          case 'transfer':
+          case 'construct':
+            target = this.arena.units[this.command.target_id];
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#20CF00';
+            break;
+        }
+        if (target) {
           ctx.beginPath();
           ctx.lineWidth = 2;
           ctx.moveTo(...pos);
           ctx.lineTo(...game_to_screen(target.pos));
           ctx.stroke();
         }
-      } else if (this.command.type === 'mine') {
-        let target = this.arena.asteroid_field.asteroid(...this.command.target_id);
-        if (target && this.laser) {
-          ctx.strokeStyle = 'rgb('+this.laser+')';
-          ctx.beginPath();
-          ctx.lineWidth = 4;
-          ctx.moveTo(...pos);
-          ctx.lineTo(...game_to_screen(target.pos));
-          ctx.stroke();
-        }
-      } else if (this.command.type === 'construct') {
-        let target = this.arena.units[this.command.target_id];
-        if (target && this.laser) {
-          ctx.strokeStyle = 'rgb('+this.laser+')';
-          ctx.beginPath();
-          ctx.lineWidth = 3;
-          ctx.moveTo(...pos);
-          ctx.lineTo(...game_to_screen(target.pos));
-          ctx.stroke();
-        }
       }
+      // move back
       ctx.save();
       ctx.translate(...pos);
       ctx.rotate(this.rotation);
     }
     if (this.activated) this.draw_upper();
     ctx.restore();
-
-    //resource_display.innerText = moi() && moi().resources.map((num) => Math.floor(num / 10));
   }
 
   Asteroid.prototype.draw = function() {
