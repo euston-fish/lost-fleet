@@ -10,6 +10,14 @@
   box-sizing: border-box;
   font-family: monospace;
 }
+.stat-cont {
+  margin-top: 4px;
+}
+.stat {
+  height: 2px;
+  background: grey;
+  margin-top: 2px
+}
 body {
   cursor: default;
   margin: 0;
@@ -162,9 +170,9 @@ currently selected unit.
       <canvas id="near_stars"></canvas>
       <canvas id="c"></canvas>
       <div id="info">
-        <button id="create">Create (cost <span id="cost"></span>)</button>
         <div id="selected"></div>
-        <div id="resources"></div>
+        <div id="pcks"></div>
+        <button id="create">Create (cost <span id="cost"></span> / <span id="cap"></span>)</button>
       </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>

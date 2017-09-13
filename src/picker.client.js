@@ -1,13 +1,17 @@
+if (!is_server) {
+  ce = (tag) => document.createElement(tag);
+  let sr = (o, p) => {
+    p.entries().forEach(([k, v]) => typeof(v) === 'object' ? sr(o[k], v) : o[k] = v); return o;
+  };
+  Node.prototype.ac = Node.prototype.appendChild;
+  Node.prototype.sr = function(p) { return sr(this, p); };
+  let cc = (e, cl) => { e.classList.add(cl); }
+  Node.prototype.cc = function(cl) { cc(this, cl); };
+}
 function make_picker(groups) {
   let picker = {};
   picker.onchange = () => {};
-  let ce = (tag) => document.createElement(tag);
-  let sr = (o, p) => { p.entries().forEach(([k, v]) => typeof(v) === 'object' ? sr(o[k], v) : o[k] = v); return o; };
-  let cc = (e, cl) => { e.classList.add(cl); }
   let el = ce('div');
-  Node.prototype.ac = Node.prototype.appendChild;
-  Node.prototype.sr = function(p) { return sr(this, p); };
-  Node.prototype.cc = function(cl) { cc(this, cl); };
   let table = el.ac(ce('table'));
   groups = groups.map(({ name: name, stats: stats }) => {
     let tr = table.ac(ce('tr'));
@@ -20,8 +24,8 @@ function make_picker(groups) {
       range.addEventListener('input', () => picker.onchange(picker.get_value()));
       return {
         name: name,
-        get_value = () => parseFloat(range.value),
-        set_value = (v) => { range.value = v; },
+        get_value: () => parseFloat(range.value),
+        set_value: (v) => { range.value = v; },
         element: tr
       }
     });
